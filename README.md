@@ -1,11 +1,14 @@
-SevisBirth
-Offline-first birth registration for Papua New Guinea.
-
-A Community Health Worker app that registers newborns in villages without internet, links each child to a parent's verified SevisPass along side the witness, and issues a digital birth certificate.
-
 Team Stax — Western Pacific University | Digital Tranformation Summit 2026
+Project Name: SevisBirth
+Description: Offline-first birth registration for Papua New Guinea.
 
-How to Run:
+Prupose: A Community Health Worker app that registers newborns in villages without internet, links each child to a parent's verified SevisPass along side the witness, and issues a digital birth certificate.
+
+
+
+How to use:
+PWA file found in Demo foulder
+
 Locally:
 Download SevisBirth.html and run the html file locally
 
