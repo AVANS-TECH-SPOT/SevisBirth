@@ -58,6 +58,71 @@ router.post("/auth/login", async (req, res) => {
   });
 });
 
+// SSO Login with OIDC4VP verified identity
+router.post("/auth/login-oidc", async (req, res) => {
+  const { sevispassUid, verifiedName } = req.body as {
+    sevispassUid?: string;
+    verifiedName?: string;
+  };
+
+  if (!sevispassUid) {
+    res.status(400).json({ error: "SevisPass UID required" });
+    return;
+  }
+
+  // Find user by SevisPass UID (verified identity)
+  const users = await db
+    .select()
+    .from(usersTable)
+    .where(eq(usersTable.sevispassId, sevispassUid))
+    .limit(1);
+
+  if (!users.length) {
+    res.status(401).json({
+      error: "User not found with this SevisPass ID",
+      oidcUser: verifiedName,
+      sevispassUid,
+    });
+    return;
+  }
+
+  const user = users[0];
+
+  // Verify user is a staff member (not field_worker)
+  // Field workers should use credential-based login
+  const staffRoles = ["facility_manager", "civil_registrar", "registrar_general"];
+  if (!staffRoles.includes(user.role)) {
+    res.status(403).json({
+      error: `OIDC4VP login requires staff role. User role is: ${user.role}`,
+      oidcUser: verifiedName,
+    });
+    return;
+  }
+
+  const sessionId = randomUUID();
+  const expiresAt = new Date(Date.now() + 1000 * 60 * 60 * 24 * 7); // 7 days
+
+  await db.insert(sessionsTable).values({
+    id: sessionId,
+    userId: user.id,
+    expiresAt,
+    active: true,
+  });
+
+  res.json({
+    token: sessionId,
+    user: {
+      id: user.id,
+      name: user.name,
+      role: user.role,
+      tier: user.tier,
+      facilityName: user.facilityName,
+      facilityCode: user.facilityCode,
+      sevispassId: user.sevispassId,
+    },
+  });
+});
+
 router.get("/auth/me", requireAuth, async (req, res) => {
   const user = (req as any).user;
   res.json(user);

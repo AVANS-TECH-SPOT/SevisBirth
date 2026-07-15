@@ -36,7 +36,7 @@ const formSchema = z.object({
   district: z.string().min(2, "Required"),
   attendant: z.string().min(2, "Required"),
   adultName: z.string().optional(),
-  adultRelation: z.string().optional(),
+  adultRelation: z.string().min(1, "Please select a relationship"),
   adultUid: z.string().optional(),
   verifyMethod: z.string().default("qr"),
   witness1: z.string().optional(),
@@ -140,6 +140,7 @@ export default function ChwRegistration() {
   const nextStep = () => {
     const fieldsMap: Record<number, (keyof FormData)[]> = {
       1: ["registrationType"],
+      2: ["adultRelation"],
       3: ["childFirstName", "childLastName", "childDob", "childSex"],
       4: ["birthPlace", "province", "district", "attendant"],
     };
