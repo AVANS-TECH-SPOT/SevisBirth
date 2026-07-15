@@ -1,0 +1,560 @@
+Back to Demo
+Developer Integration Guide
+Complete guide for integrating Digital Identity SSO into your applications using OIDC4VP (OpenID Connect for Verifiable Presentations) standards.
+
+Table of Contents
+Overview
+Quick Start
+Sample Integration
+Authentication Flow
+API Reference
+Integration Examples
+Security
+Configuration
+Troubleshooting
+Overview
+This Digital Identity SSO service provides secure authentication using OIDC4VP standards, allowing users to authenticate with verifiable credentials through QR code scanning or WebAuthn biometric authentication.
+
+🔐 Secure Authentication
+Industry-standard OIDC4VP protocol ensures your data remains secure and private with verifiable credentials.
+
+📱 QR Code Flow
+Users can authenticate by scanning QR codes with their mobile identity wallets for seamless UX.
+
+👆 Biometric Support
+WebAuthn integration allows users to authenticate using fingerprint, face ID, or hardware security keys.
+
+🔧 Easy Integration
+Simple REST API endpoints with comprehensive documentation and example implementations.
+
+Supported Authentication Methods
+QR Code Authentication: Users scan QR codes with their digital identity wallet
+WebAuthn Biometric: Fingerprint, face ID, or hardware security key authentication
+Third-party Integration: Seamless integration for external websites and applications
+Quick Start
+Get up and running with Digital Identity SSO in minutes. Follow these steps to integrate authentication into your application.
+
+Prerequisites: You'll need a registered domain with HTTPS enabled and a callback endpoint to receive authentication tokens.
+Step 1: Register Your Application
+Contact the SSO service administrator to:
+
+Register your domain in the allowed origins list
+Configure your callback URL
+Obtain client credentials (if required)
+Step 2: Install Dependencies
+npm install qrcode-generator
+# or
+yarn add qrcode-generator
+Step 3: Basic Integration
+// Initialize authentication
+const auth = new DigitalIdentityAuth({
+  serverUrl: 'https://your-sso-server.com',
+  clientId: 'your-client-id',
+  callbackUrl: 'https://your-website.com/auth/callback'
+});
+
+// Start authentication flow
+async function startAuth() {
+  try {
+    const { qrCode, sessionId } = await auth.initiateAuth();
+    displayQRCode(qrCode);
+    pollForCompletion(sessionId);
+  } catch (error) {
+    console.error('Authentication failed:', error);
+  }
+}
+Authentication Flow
+The authentication process follows the OIDC4VP standard with these key steps:
+
+QR Code Authentication Flow
+Initiate Request: Your application requests authentication from the SSO server
+QR Code Generation: Server generates a QR code containing presentation request
+User Scanning: User scans QR code with their digital identity wallet
+Credential Verification: Wallet verifies and presents credentials
+Token Exchange: Server validates credentials and returns access token
+User Authentication: User is authenticated in your application
+WebAuthn Authentication Flow
+Registration: User first registers biometric credentials after QR authentication
+Authentication Request: Application requests WebAuthn authentication
+Biometric Challenge: Browser prompts for biometric verification
+Credential Verification: Server validates the biometric signature
+Session Creation: Authenticated session is created
+Sample Integration Project
+A complete, working example of how to integrate Digital Identity SSO into your application. This sample demonstrates both frontend and backend integration patterns with all the fixes and best practices applied.
+
+Ready to Use: The sample integration is fully functional and includes all the fixes for common issues like QR code display and CORS problems.
+What's Included
+Complete Frontend: HTML, CSS, and JavaScript with proper QR code display
+Express.js Backend: Full API implementation with session management
+Authentication Library: Reusable JavaScript library for easy integration
+Configuration: Environment setup and client credentials
+Testing Suite: Integration tests and debugging tools
+Documentation: Complete setup and troubleshooting guides
+Quick Start with Sample
+# Navigate to sample integration
+cd sample-integration
+
+# Install dependencies
+npm install
+
+# Configure environment
+cp .env.example .env
+# Edit .env with your settings
+
+# Start the sample server
+npm start
+
+# Open in browser
+# http://localhost:3001
+Key Features Demonstrated
+SVG QR Code Display: Proper handling of SVG QR codes (not image URLs)
+CORS Headers: Correct Origin header implementation
+Session Management: Secure session handling and cleanup
+Error Handling: Comprehensive error management and user feedback
+Security: CSRF protection and secure headers
+Production Ready: The sample integration follows security best practices and can be used as a starting point for your own implementation.
+Location: /sample-integration/ directory in the project root
+
+Documentation: See sample-integration/README.md for complete setup instructions
+
+API Reference
+Complete reference for all available API endpoints and their usage.
+
+POST /api/auth/third-party/authorize
+Initiate Third-Party Authentication
+Starts the authentication flow for external applications.
+
+Headers:
+
+Content-Type: application/json
+X-Client-ID: your-client-id
+X-Client-Secret: your-client-secret
+Request Body:
+
+{
+  "callback_url": "https://your-website.com/auth/callback",
+  "state": "unique-state-string",
+  "nonce": "unique-nonce-string"
+}
+Response:
+
+{
+  "qrCode": "<svg xmlns=\"http://www.w3.org/2000/svg\" width=\"300\" height=\"300\"...</svg>",
+  "sessionId": "abc123def456",
+  "state": "unique-state-string",
+  "nonce": "unique-nonce-string"
+}
+Note: The qrCode field contains an SVG string, not a base64 image. Inject it directly into the DOM using innerHTML for proper display.
+POST /api/auth/callback
+Handle Authentication Callback
+Processes the verifiable presentation token from the user's wallet.
+
+Request Body:
+
+{
+  "vp_token": "eyJhbGciOiJFUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "state": "unique-state-string"
+}
+Response:
+
+{
+  "success": true,
+  "sessionId": "abc123def456",
+  "accessToken": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...",
+  "redirect": "/redirect?session=abc123def456"
+}
+GET /api/session/status
+Check Session Status
+Polls the authentication status for a given session.
+
+Query Parameters:
+
+?session=abc123def456
+Response:
+
+{
+  "sessionId": "abc123def456",
+  "authenticated": true,
+  "hasRedirect": true,
+  "redirect": "/user?session=abc123def456"
+}
+GET /api/user
+Get User Information
+Retrieves authenticated user data and credentials.
+
+Query Parameters:
+
+?session=abc123def456
+Response:
+
+{
+  "user": {
+    "sub": "did:example:123",
+    "name": "John Doe",
+    "email": "john@example.com",
+    "ageOver18": true,
+    "validUntil": "2025-12-31T23:59:59Z",
+    "credentials": [...]
+  },
+  "sessionId": "abc123def456",
+  "fieldMappings": {...}
+}
+Integration Examples
+Complete examples showing how to integrate Digital Identity SSO into different types of applications.
+
+JavaScript/React Integration
+class DigitalIdentityAuth {
+  constructor(config) {
+    this.serverUrl = config.serverUrl;
+    this.clientId = config.clientId;
+    this.clientSecret = config.clientSecret;
+    this.callbackUrl = config.callbackUrl;
+  }
+
+  async initiateAuth() {
+    const response = await fetch(`${this.serverUrl}/api/auth/third-party/authorize`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Client-ID': this.clientId,
+        'X-Client-Secret': this.clientSecret
+      },
+      body: JSON.stringify({
+        callback_url: this.callbackUrl,
+        state: this.generateState(),
+        nonce: this.generateNonce()
+      })
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to initiate auth');
+    }
+
+    return await response.json();
+  }
+
+  generateState() {
+    return crypto.randomUUID();
+  }
+
+  generateNonce() {
+    return crypto.randomUUID();
+  }
+
+  async pollForCompletion(sessionId) {
+    const pollInterval = setInterval(async () => {
+      try {
+        const response = await fetch(
+          `${this.serverUrl}/api/session/status?session=${sessionId}`
+        );
+        const data = await response.json();
+
+        if (data.authenticated) {
+          clearInterval(pollInterval);
+          this.handleSuccess(data);
+        }
+      } catch (error) {
+        clearInterval(pollInterval);
+        this.handleError(error);
+      }
+    }, 2000);
+  }
+
+  handleSuccess(data) {
+    // Redirect to your application's authenticated area
+    window.location.href = `/dashboard?session=${data.sessionId}`;
+  }
+
+  handleError(error) {
+    console.error('Authentication failed:', error);
+    // Handle error (show user message, retry, etc.)
+  }
+}
+
+// Usage
+const auth = new DigitalIdentityAuth({
+  serverUrl: 'https://your-sso-server.com',
+  clientId: 'your-client-id',
+  clientSecret: 'your-client-secret',
+  callbackUrl: 'https://your-website.com/auth/callback'
+});
+
+// Start authentication
+async function startAuth() {
+  try {
+    const { qrCode, sessionId } = await auth.initiateAuth();
+    displayQRCode(qrCode);
+    auth.pollForCompletion(sessionId);
+  } catch (error) {
+    showError('Failed to start authentication');
+  }
+}
+Node.js/Express Integration
+const express = require('express');
+const axios = require('axios');
+const app = express();
+
+// Authentication endpoint
+app.post('/auth/initiate', async (req, res) => {
+  try {
+    const response = await axios.post(
+      'https://your-sso-server.com/api/auth/third-party/authorize',
+      {
+        callback_url: 'https://your-website.com/auth/callback',
+        state: generateState(),
+        nonce: generateNonce()
+      },
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Client-ID': process.env.CLIENT_ID,
+          'X-Client-Secret': process.env.CLIENT_SECRET
+        }
+      }
+    );
+
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: 'Authentication initiation failed' });
+  }
+});
+
+// Callback endpoint
+app.post('/auth/callback', async (req, res) => {
+  const { vp_token, state } = req.body;
+  
+  try {
+    // Verify state matches stored value
+    if (!verifyState(state)) {
+      return res.status(400).json({ error: 'Invalid state' });
+    }
+
+    // Process the VP token and extract user information
+    const userInfo = await processVPToken(vp_token);
+    
+    // Create user session
+    req.session.user = userInfo;
+    
+    res.json({ success: true, redirect: '/dashboard' });
+  } catch (error) {
+    res.status(500).json({ error: 'Authentication failed' });
+  }
+});
+
+function generateState() {
+  return require('crypto').randomUUID();
+}
+
+function generateNonce() {
+  return require('crypto').randomUUID();
+}
+
+function verifyState(receivedState) {
+  // Implement state verification logic
+  return true; // Simplified for example
+}
+
+async function processVPToken(vpToken) {
+  // Implement VP token processing
+  // This should verify the JWT signature and extract claims
+  return {
+    sub: 'user-id',
+    name: 'User Name',
+    email: 'user@example.com'
+  };
+}
+PHP Integration
+serverUrl = $config['serverUrl'];
+        $this->clientId = $config['clientId'];
+        $this->clientSecret = $config['clientSecret'];
+        $this->callbackUrl = $config['callbackUrl'];
+    }
+
+    public function initiateAuth() {
+        $data = [
+            'callback_url' => $this->callbackUrl,
+            'state' => $this->generateState(),
+            'nonce' => $this->generateNonce()
+        ];
+
+        $response = $this->makeRequest('/api/auth/third-party/authorize', $data);
+        return json_decode($response, true);
+    }
+
+    public function checkSessionStatus($sessionId) {
+        $response = $this->makeRequest('/api/session/status', [], 'GET', [
+            'session' => $sessionId
+        ]);
+        return json_decode($response, true);
+    }
+
+    private function makeRequest($endpoint, $data = [], $method = 'POST', $queryParams = []) {
+        $url = $this->serverUrl . $endpoint;
+        
+        if (!empty($queryParams)) {
+            $url .= '?' . http_build_query($queryParams);
+        }
+
+        $headers = [
+            'Content-Type: application/json',
+            'X-Client-ID: ' . $this->clientId,
+            'X-Client-Secret: ' . $this->clientSecret
+        ];
+
+        $ch = curl_init();
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        curl_setopt($ch, CURLOPT_HTTPHEADER, $headers);
+
+        if ($method === 'POST' && !empty($data)) {
+            curl_setopt($ch, CURLOPT_POST, true);
+            curl_setopt($ch, CURLOPT_POSTFIELDS, json_encode($data));
+        }
+
+        $response = curl_exec($ch);
+        curl_close($ch);
+
+        return $response;
+    }
+
+    private function generateState() {
+        return bin2hex(random_bytes(16));
+    }
+
+    private function generateNonce() {
+        return bin2hex(random_bytes(16));
+    }
+}
+
+// Usage
+$auth = new DigitalIdentityAuth([
+    'serverUrl' => 'https://your-sso-server.com',
+    'clientId' => $_ENV['CLIENT_ID'],
+    'clientSecret' => $_ENV['CLIENT_SECRET'],
+    'callbackUrl' => 'https://your-website.com/auth/callback'
+]);
+
+// Initiate authentication
+if ($_POST['action'] === 'start_auth') {
+    $result = $auth->initiateAuth();
+    echo json_encode($result);
+}
+
+// Check session status
+if ($_GET['action'] === 'check_status') {
+    $sessionId = $_GET['session'];
+    $status = $auth->checkSessionStatus($sessionId);
+    echo json_encode($status);
+}
+?>
+Security Considerations
+Implement these security best practices when integrating with Digital Identity SSO.
+
+State Parameter Security
+Important: Always generate and verify state parameters to prevent CSRF attacks.
+Generate cryptographically secure random state values
+Store state in secure session storage
+Verify state matches exactly in callback
+Use state expiration (recommended: 10 minutes)
+HTTPS Requirements
+Always use HTTPS for all communications
+Validate SSL certificates properly
+Use secure cookies with appropriate flags
+Implement HSTS headers
+Token Storage
+Store access tokens securely (httpOnly cookies recommended)
+Implement proper token rotation
+Clear tokens on logout
+Use short-lived tokens with refresh mechanism
+Error Handling
+Implement proper error handling and logging
+Don't expose sensitive information in error messages
+Log security-related events for monitoring
+Implement rate limiting on your endpoints
+Configuration
+Environment variables and configuration options for your integration.
+
+Required Environment Variables
+# SSO Server Configuration
+OIDC4VP_SERVER_URL=https://your-sso-server.com
+CLIENT_ID=your-client-id
+CLIENT_SECRET=your-client-secret
+CALLBACK_URL=https://your-website.com/auth/callback
+
+# Security Configuration
+JWT_SECRET=your-jwt-secret-key
+SESSION_SECRET=your-session-secret
+Allowed Origins Configuration
+Contact the SSO administrator to register your domain:
+
+ALLOWED_ORIGINS=https://your-website.com,https://app.your-website.com
+ALLOWED_CALLBACK_URLS=https://your-website.com/auth/callback
+Rate Limiting
+Default Limits: 100 requests per 15 minutes per IP address. Contact administrator for higher limits if needed.
+Troubleshooting
+Common issues and their solutions when integrating with Digital Identity SSO.
+
+CORS Errors
+Error: "Access to fetch at '...' from origin '...' has been blocked by CORS policy"
+Solution:
+
+Ensure your domain is registered in ALLOWED_ORIGINS
+Verify your callback URL is in ALLOWED_CALLBACK_URLS
+Check that you're using HTTPS
+Authentication Failures
+Error: "Invalid client credentials" or "Authentication failed"
+Solution:
+
+Verify your client ID and secret are correct
+Check that headers are properly formatted
+Ensure state parameter matches exactly
+Verify callback URL is registered
+Origin Header: Include Origin header in all requests to match your domain
+Note: The "Invalid client credentials" error may actually be a CORS issue. Check the server logs for "Invalid origin" messages.
+// Include Origin header in requests
+const headers = {
+    'Content-Type': 'application/json',
+    'X-Client-ID': clientId,
+    'Origin': window.location.origin // Required for CORS validation
+};
+Session Issues
+Error: "Session not found" or "Session expired"
+Solution:
+
+Check session storage implementation
+Verify session expiration settings
+Ensure proper session cleanup on logout
+Check for session ID mismatch
+QR Code Issues
+Issue: QR code not displaying or showing 404 errors
+Solution:
+
+SVG Format: QR codes are returned as SVG strings, not base64 images
+Display Method: Inject SVG directly into DOM using innerHTML, not as image source
+Container: Use a div container for SVG content instead of img element
+Styling: Apply CSS to the SVG element for proper sizing and appearance
+Example: qrContainer.innerHTML = qrCodeData;
+<!-- Correct: Use div for SVG QR code -->
+<div id="qr-code" class="qr-code-svg"></div>
+
+<!-- Incorrect: Don't use img for SVG string -->
+<img id="qr-image" src="" alt="QR Code">
+// Correct: Inject SVG directly
+const qrCodeDiv = document.getElementById('qr-code');
+qrCodeDiv.innerHTML = response.qrCode;
+
+// Incorrect: Don't set SVG string as image source
+// qrImage.src = response.qrCode; // This causes 404 errors
+Debugging Tips
+Enable debug logging in your application
+Check browser developer tools for network requests
+Verify all required headers are present
+Test with the provided test credentials first
+Use the session status endpoint to monitor authentication progress
+Getting Help
+If you're still experiencing issues:
+
+Check the server logs for detailed error messages
+Contact the SSO service administrator
+Review the complete API documentation
+Test with the provided example implementations

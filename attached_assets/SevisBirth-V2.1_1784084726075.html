@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#E8A838">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="description" content="SevisBirth — offline-first birth registration for Community Health Workers in Papua New Guinea">
+<meta name="apple-mobile-web-app-title" content="SevisBirth">
+<title>SevisBirth</title>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+<style>
+:root{
+  --bg:#0C0F14;--bg2:#141820;--card:#1A1F2B;--card2:#212738;
+  --fg:#F0EDE6;--mu:#8A8F9C;--dm:#5A5F6C;
+  --ac:#E8A838;--ac2:#D4872E;--acG:rgba(232,168,56,.15);
+  --ok:#34D399;--okG:rgba(52,211,153,.1);
+  --wn:#FBBF24;--wnG:rgba(251,191,36,.1);
+  --er:#F87171;--erG:rgba(248,113,113,.1);
+  --in:#60A5FA;--inG:rgba(96,165,250,.1);
+  --pu:#A855F7;--puG:rgba(168,85,247,.1);
+  --bd:rgba(255,255,255,.06);--bdA:rgba(232,168,56,.3);
+  --r:12px;--rs:8px;--rl:16px;
+  --t:.25s cubic-bezier(.4,0,.2,1)
+}
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#060810;color:var(--fg);min-height:100vh;min-height:100dvh;overflow:hidden;-webkit-font-smoothing:antialiased}
+.dev{max-width:480px;margin:0 auto;height:100vh;height:100dvh;display:flex;flex-direction:column;position:relative;background:var(--bg);overflow:hidden}
+@media(min-width:768px){body{display:flex;align-items:center;justify-content:center;padding:20px}.dev{height:92vh;max-height:92vh;border-radius:32px;border:2px solid var(--bd);box-shadow:0 0 80px rgba(232,168,56,.05)}}
+
+/* Status bar */
+.sbar{display:flex;justify-content:space-between;align-items:center;padding:6px 12px;font-size:11px;font-weight:600;color:var(--mu);background:var(--bg);border-bottom:1px solid var(--bd);flex-shrink:0;z-index:100;min-height:36px;gap:4px}
+.sbar .tm{font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.sbar-r{display:flex;align-items:center;gap:5px}
+.badge{display:flex;align-items:center;gap:3px;padding:3px 7px;border-radius:12px;font-size:9px;font-weight:700;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.badge.q{background:var(--inG);color:var(--in);border:1px solid rgba(96,165,250,.15)}
+.badge.a{background:var(--puG);color:var(--pu);border:1px solid rgba(168,85,247,.15)}
+.si{display:flex;align-items:center;gap:4px;padding:3px 8px;border-radius:14px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.3px;transition:var(--t);flex-shrink:0}
+.si.off{background:var(--wnG);color:var(--wn);border:1px solid rgba(251,191,36,.2)}
+.si.on{background:var(--okG);color:var(--ok);border:1px solid rgba(52,211,153,.2)}
+.pl{width:4px;height:4px;border-radius:50%;background:currentColor;animation:pls 2s infinite}
+@keyframes pls{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.4;transform:scale(.7)}}
+
+/* Connectivity banner */
+.cb{position:absolute;top:36px;left:0;right:0;height:40px;z-index:10000;display:flex;align-items:center;justify-content:center;gap:6px;font-size:11px;font-weight:600;transform:translateY(-100%);transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.cb.show{transform:translateY(0)}
+.cb.offline{background:#78350F;color:#FDE68A}
+.cb.online{background:#064E3B;color:#6EE7B7}
+
+/* Content */
+.content{flex:1;overflow-y:auto;overflow-x:hidden;scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+.content::-webkit-scrollbar{width:3px}
+.content::-webkit-scrollbar-thumb{background:var(--dm);border-radius:3px}
+
+/* Screens */
+.sc{display:none;padding:0 16px 88px;animation:fi .25s ease}
+.sc.active{display:block}
+@keyframes fi{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* Bottom nav */
+.bnav{flex-shrink:0;display:flex;background:var(--bg2);border-top:1px solid var(--bd);padding:4px 0 6px;z-index:200;min-height:56px}
+.ni{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:6px 2px 4px;cursor:pointer;transition:var(--t);border:none;background:none;color:var(--dm);font-family:inherit}
+.ni:hover{color:var(--mu)}
+.ni.act{color:var(--ac)}
+.ni i{font-size:17px}
+.ni span{font-size:9px;font-weight:700;letter-spacing:.2px}
+.ni.nc{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#0C0F14;width:44px;height:44px;border-radius:50%;margin-top:-18px;display:flex;flex-direction:column;align-items:center;justify-content:center;box-shadow:0 4px 16px rgba(232,168,56,.35)}
+.ni.nc i{font-size:18px;color:#0C0F14}
+.ni.nc span{font-size:8px;color:rgba(12,15,20,.7)}
+
+/* Hero */
+.hero{text-align:center;padding:20px 0 14px}
+.hero .lg{width:52px;height:52px;border-radius:14px;background:linear-gradient(135deg,var(--ac),var(--ac2));display:flex;align-items:center;justify-content:center;margin:0 auto 12px;font-size:22px;color:#0C0F14;box-shadow:0 6px 24px rgba(232,168,56,.25)}
+.hero h2{font-size:22px;font-weight:900;letter-spacing:-.4px}
+.hero h2 span{color:var(--ac)}
+
+/* Crisis banner */
+.ps{background:linear-gradient(135deg,rgba(248,113,113,.08),rgba(248,113,113,.03));border:1px solid rgba(248,113,113,.12);border-radius:var(--r);padding:12px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px}
+.ps i{color:var(--er);font-size:16px;flex-shrink:0}
+.ps .pt{font-size:11px;line-height:1.4;color:var(--mu)}
+.ps .pt strong{color:var(--er);font-weight:700}
+.psn{display:flex;gap:14px;margin-top:6px}
+.psn span{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;color:var(--er)}
+
+/* Worker card */
+.wc{background:var(--card);border:1px solid var(--bd);border-radius:var(--rl);padding:12px;display:flex;align-items:center;gap:10px;margin-bottom:14px}
+.wc .wa{width:40px;height:40px;border-radius:10px;background:linear-gradient(135deg,#2D3548,#1A1F2B);display:flex;align-items:center;justify-content:center;font-size:16px;color:var(--ac);flex-shrink:0}
+.wc .wi h3{font-size:13px;font-weight:700}
+.wc .wi .wr{font-size:10px;color:var(--mu);text-transform:uppercase;letter-spacing:.4px}
+.wc .wi .wid{font-size:10px;color:var(--dm);font-family:'JetBrains Mono',monospace;margin-top:1px}
+.wc .wt{margin-left:auto;padding:3px 8px;border-radius:16px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.4px;flex-shrink:0}
+
+/* Stats grid */
+.sts{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;margin-bottom:16px}
+.st{background:var(--card);border:1px solid var(--bd);border-radius:var(--rs);padding:10px 4px;text-align:center}
+.st .sn{font-size:20px;font-weight:900;font-family:'JetBrains Mono',monospace;margin-bottom:1px}
+.st .sl{font-size:8px;color:var(--mu);text-transform:uppercase;letter-spacing:.3px;line-height:1.2}
+.st.a .sn{color:var(--ac)}
+.st.s .sn{color:var(--ok)}
+.st.i .sn{color:var(--in)}
+.st.p .sn{color:var(--pu)}
+
+/* Section label */
+.al{font-size:10px;font-weight:700;color:var(--dm);text-transform:uppercase;letter-spacing:.8px;margin-bottom:8px}
+
+/* Action button */
+.ab{display:flex;align-items:center;gap:12px;padding:12px;background:var(--card);border:1px solid var(--bd);border-radius:var(--r);cursor:pointer;transition:var(--t);text-align:left;color:var(--fg);font-family:inherit;width:100%;margin-bottom:6px}
+.ab:hover{background:var(--card2);border-color:var(--bdA)}
+.ab:active{transform:scale(.98)}
+.ab .ai{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.ab .ai.p{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#0C0F14}
+.ab .ai.s{background:var(--bg2);color:var(--mu);border:1px solid var(--bd)}
+.ab .at h4{font-size:13px;font-weight:700;margin-bottom:1px}
+.ab .at p{font-size:10px;color:var(--mu);line-height:1.3}
+.ab .ar{margin-left:auto;color:var(--dm);font-size:11px}
+
+/* Pending record row */
+.pd{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--card);border:1px solid var(--bd);border-radius:var(--rs);margin-bottom:5px}
+.pd .dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.dot.pending{background:var(--wn)}
+.dot.synced{background:var(--ok)}
+.dot.flagged{background:var(--er)}
+.pd .pi{flex:1;min-width:0}
+.pd .pn{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pd .pp{font-size:10px;color:var(--mu);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.pst{font-size:9px;font-weight:600;text-transform:uppercase;letter-spacing:.2px;padding:2px 7px;border-radius:8px;flex-shrink:0}
+.pst.pending{background:var(--wnG);color:var(--wn)}
+.pst.synced{background:var(--okG);color:var(--ok)}
+.pst.flagged{background:var(--erG);color:var(--er)}
+.del-btn{background:none;border:none;color:var(--dm);cursor:pointer;padding:4px 6px;font-size:12px;transition:var(--t);flex-shrink:0}
+.del-btn:hover{color:var(--er)}
+
+/* Form header */
+.form-hdr{padding:12px 0 8px;display:flex;align-items:center;justify-content:space-between}
+.form-hdr h1{font-size:17px;font-weight:800;letter-spacing:-.3px}
+.bk{width:32px;height:32px;border-radius:8px;background:var(--card);border:1px solid var(--bd);color:var(--mu);display:flex;align-items:center;justify-content:center;cursor:pointer;transition:var(--t);font-size:12px}
+.bk:hover{background:var(--card2);color:var(--fg)}
+
+/* Progress */
+.prog-wrap{position:sticky;top:0;z-index:50;background:var(--bg);padding:10px 0 8px;border-bottom:1px solid var(--bd)}
+.prog-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
+.prog-info span{font-size:11px;font-weight:600}
+.prog-info .pi-pct{color:var(--ac);font-family:'JetBrains Mono',monospace}
+.prog-info .pi-lbl{color:var(--mu)}
+.prog-bar{height:4px;background:var(--bd);border-radius:2px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--ac2),var(--ac));border-radius:2px;transition:width .4s ease;width:0%}
+
+/* Registration type */
+.rt-sel{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:16px}
+.rt-btn{padding:10px 8px;border:1px solid var(--bd);border-radius:var(--rs);background:var(--card);color:var(--mu);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer;transition:var(--t);text-align:center;line-height:1.3}
+.rt-btn:hover{border-color:var(--dm);color:var(--fg)}
+.rt-btn.sel{border-color:var(--ac);background:var(--acG);color:var(--ac)}
+.rt-btn small{display:block;font-size:9px;color:var(--dm);margin-top:2px;font-weight:400}
+.rt-btn.sel small{color:var(--ac);opacity:.8}
+
+/* Form section */
+.fsec{margin-bottom:20px}
+.fsec-hd{display:flex;align-items:center;gap:8px;margin-bottom:10px;padding-bottom:6px;border-bottom:1px solid var(--bd)}
+.fsec-hd i{font-size:13px;color:var(--ac);width:20px;text-align:center}
+.fsec-hd h3{font-size:13px;font-weight:700;color:var(--fg)}
+.fsec-tag{margin-left:auto;font-size:9px;font-weight:600;color:var(--dm);background:var(--bg2);padding:2px 8px;border-radius:10px;border:1px solid var(--bd)}
+
+/* Form group & input */
+.fg{margin-bottom:12px}
+.fg label{display:block;font-size:11px;font-weight:600;color:var(--mu);margin-bottom:4px;text-transform:uppercase;letter-spacing:.3px}
+.fi{width:100%;padding:10px 12px;background:var(--card);border:1px solid var(--bd);border-radius:var(--rs);color:var(--fg);font-family:inherit;font-size:13px;transition:var(--t);outline:none}
+.fi:focus{border-color:var(--ac);box-shadow:0 0 0 2px var(--acG)}
+.fi::placeholder{color:var(--dm)}
+select.fi{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%238A8F9C' stroke-width='2'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;padding-right:30px}
+textarea.fi{resize:vertical;min-height:60px;font-family:inherit}
+.fr{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.fh{font-size:11px;color:var(--dm);margin-top:2px}
+
+/* Radio pills */
+.rp{display:flex;flex-wrap:wrap;gap:6px}
+.rp-btn{padding:8px 14px;border:1px solid var(--bd);border-radius:20px;background:var(--card);color:var(--mu);font-family:inherit;font-size:12px;font-weight:500;cursor:pointer;transition:var(--t)}
+.rp-btn:hover{border-color:var(--dm);color:var(--fg)}
+.rp-btn.sel{border-color:var(--ac);background:var(--acG);color:var(--ac)}
+
+/* Callout */
+.ca{display:flex;gap:8px;padding:10px 12px;border-radius:var(--rs);margin-bottom:12px;font-size:11px;line-height:1.5}
+.ca i{flex-shrink:0;margin-top:1px}
+.ca.w{background:var(--wnG);color:var(--wn);border:1px solid rgba(251,191,36,.15)}
+.ca.inf{background:var(--inG);color:var(--in);border:1px solid rgba(96,165,250,.15)}
+.ca.ok{background:var(--okG);color:var(--ok);border:1px solid rgba(52,211,153,.15)}
+.ca.er{background:var(--erG);color:var(--er);border:1px solid rgba(248,113,113,.15)}
+.ca.pur{background:var(--puG);color:var(--pu);border:1px solid rgba(168,85,247,.15)}
+
+/* QR area */
+.qr-area{border:2px dashed var(--bd);border-radius:var(--rl);padding:24px 16px;text-align:center;margin-bottom:12px;cursor:pointer;transition:var(--t)}
+.qr-area:hover{border-color:var(--ac)}
+.qr-area.scanning{border-color:var(--ac);border-style:solid;background:var(--acG)}
+.qr-area.verified{border-color:var(--ok);border-style:solid;background:var(--okG)}
+.qr-area.dedup-warn{border-color:var(--wn);border-style:solid;background:var(--wnG)}
+.qr-area .qi{font-size:30px;color:var(--dm);margin-bottom:8px;transition:var(--t)}
+.qr-area.scanning .qi{color:var(--ac)}
+.qr-area.verified .qi{color:var(--ok)}
+.qr-area.dedup-warn .qi{color:var(--wn)}
+.qr-area h4{font-size:13px;font-weight:700;margin-bottom:2px}
+.qr-area p{font-size:10px;color:var(--mu);line-height:1.3}
+.qr-sprog{display:none;margin-top:10px}
+.qr-sprog.active{display:block}
+.qr-sbar{height:3px;background:var(--bd);border-radius:2px;overflow:hidden;margin-bottom:4px}
+.qr-sbar-f{height:100%;background:var(--ac);border-radius:2px;transition:width .3s;width:0%}
+.qr-sbar-f.done{background:var(--ok);width:100%}
+.qr-sbar-f.warn{background:var(--wn);width:100%}
+.qr-stxt{font-size:10px;color:var(--mu);font-family:'JetBrains Mono',monospace}
+
+/* Verified badge */
+.vb{display:none;align-items:center;gap:8px;padding:9px 12px;background:var(--okG);border:1px solid rgba(52,211,153,.2);border-radius:var(--rs);margin-bottom:12px}
+.vb.show{display:flex}
+.vb i{color:var(--ok);font-size:14px}
+.vb .vt{font-size:11px;font-weight:600;color:var(--ok)}
+.vb .vd{font-size:10px;color:var(--mu);margin-top:1px}
+
+/* Trust / dedup cards */
+.tc-card{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:12px;margin-bottom:8px;transition:var(--t)}
+.tc-card h4{font-size:12px;font-weight:700;margin-bottom:6px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.tc-card .tc-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;font-size:12px}
+.tc-card .tc-row .tl{color:var(--mu);font-size:11px}
+.tc-card .tc-row .tv{font-weight:600;text-align:right;font-size:11px}
+.tc-card .tc-sub{font-size:10px;color:var(--dm);margin-top:4px;line-height:1.4;font-style:italic}
+.tc-card.dedup-active{border-color:rgba(168,85,247,.3);background:linear-gradient(135deg,var(--card),rgba(168,85,247,.05))}
+.tc-card.dedup-warn{border-color:rgba(251,191,36,.3);background:linear-gradient(135deg,var(--card),rgba(251,191,36,.05))}
+
+/* Dedup detail */
+.dedup-detail{background:var(--bg);border:1px solid var(--bd);border-radius:var(--rs);padding:10px 12px;margin-top:8px;font-size:10px;font-family:'JetBrains Mono',monospace;line-height:1.8;color:var(--dm)}
+.dedup-detail .dl{color:var(--mu)}
+.dedup-detail .dv{color:var(--fg);font-weight:600}
+.dedup-detail .dv.ok{color:var(--ok)}
+.dedup-detail .dv.wn{color:var(--wn)}
+.dedup-detail .dv.er{color:var(--er)}
+
+/* Dedup method badges */
+.dm{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;border-radius:6px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+.dm.local{background:var(--puG);color:var(--pu)}
+.dm.server{background:var(--inG);color:var(--in)}
+.dm.composite{background:var(--acG);color:var(--ac)}
+
+/* Witness */
+.wit{background:var(--card);border:1px solid var(--bd);border-radius:var(--rs);padding:10px;margin-bottom:6px;display:flex;align-items:center;gap:10px;cursor:pointer;transition:var(--t)}
+.wit:hover{border-color:var(--bdA)}
+.wit .wva{width:34px;height:34px;border-radius:8px;background:var(--bg2);display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--dm);flex-shrink:0;transition:var(--t)}
+.wit.verified .wva{background:var(--okG);color:var(--ok)}
+.wit .wvi{flex:1;min-width:0}
+.wit .wn{font-size:12px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.wit .wtt{font-size:9px;color:var(--dm);font-family:'JetBrains Mono',monospace}
+.wsb{padding:3px 8px;border-radius:8px;font-size:9px;font-weight:700;text-transform:uppercase;flex-shrink:0}
+.wsb.verified{background:var(--okG);color:var(--ok)}
+.wsb.pending{background:var(--wnG);color:var(--wn)}
+
+/* Flag row */
+.flag-row{display:flex;align-items:center;gap:8px;padding:8px 12px;background:var(--erG);border:1px solid rgba(248,113,113,.2);border-radius:var(--rs);margin-bottom:8px}
+.flag-row i{color:var(--er);font-size:14px;flex-shrink:0}
+.flag-row .flag-text{font-size:11px;line-height:1.4;color:var(--er);flex:1}
+
+/* Submit */
+.submit-area{padding:16px 0 8px;border-top:1px solid var(--bd);margin-top:8px}
+.bp{width:100%;padding:14px;border:none;border-radius:var(--r);background:linear-gradient(135deg,var(--ac),var(--ac2));color:#0C0F14;font-family:inherit;font-size:14px;font-weight:700;cursor:pointer;transition:var(--t);display:flex;align-items:center;justify-content:center;gap:8px}
+.bp:hover{filter:brightness(1.1)}
+.bp:active{transform:scale(.98)}
+.bp:disabled{opacity:.3;cursor:not-allowed;transform:none;filter:none}
+.bsc{border:1px solid var(--bd);border-radius:var(--r);background:var(--card);color:var(--fg);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:var(--t);margin-top:8px;width:100%;padding:12px;display:flex;align-items:center;justify-content:center;gap:8px}
+.bsc:hover{background:var(--card2)}
+.tiny{font-size:9px;color:var(--dm);line-height:1.4;text-align:center;margin-top:10px}
+
+/* Success */
+.suc{text-align:center;padding:28px 0 14px}
+.sic{width:68px;height:68px;border-radius:50%;background:var(--okG);border:2px solid rgba(52,211,153,.3);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;font-size:30px;color:var(--ok);animation:sucP .5s ease}
+@keyframes sucP{0%{transform:scale(0);opacity:0}50%{transform:scale(1.15)}100%{transform:scale(1);opacity:1}}
+.suc h2{font-size:20px;font-weight:900;margin-bottom:4px}
+.suc .sub{font-size:12px;color:var(--mu);line-height:1.5;max-width:300px;margin:0 auto 16px}
+.cp{background:linear-gradient(135deg,#1E2430,#252C3A);border:1px solid var(--bdA);border-radius:var(--rl);padding:16px;margin-bottom:14px;text-align:left}
+.cp .ch{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;padding-bottom:8px;border-bottom:1px solid var(--bd)}
+.cp .ch h4{font-size:11px;color:var(--ac);text-transform:uppercase;letter-spacing:.8px;font-weight:700}
+.cp .ch .ci{font-size:10px;color:var(--dm);font-family:'JetBrains Mono',monospace}
+.cp .cn{font-size:16px;font-weight:900;margin-bottom:8px}
+.cp .cd{font-size:11px;color:var(--mu);line-height:1.7}
+.cp .cf{margin-top:10px;padding-top:8px;border-top:1px solid var(--bd);display:flex;justify-content:space-between;align-items:center}
+.cp .cf span{font-size:9px;color:var(--dm);font-family:'JetBrains Mono',monospace}
+
+/* SMS */
+.sms{background:var(--card);border:1px solid var(--bd);border-radius:var(--r);padding:12px;margin-bottom:14px;text-align:left}
+.sms-b{background:#1A3A1A;border:1px solid rgba(52,211,153,.15);border-radius:10px 10px 10px 4px;padding:10px 12px;font-size:12px;line-height:1.5;max-width:92%;word-break:break-word}
+.sms-m{font-size:9px;color:var(--dm);margin-top:4px;padding-left:3px;font-family:'JetBrains Mono',monospace}
+
+/* Settings */
+.sit{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;border-bottom:1px solid var(--bd)}
+.sit:last-child{border-bottom:none}
+.sil{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+.sil .sii{width:32px;height:32px;border-radius:8px;background:var(--card);display:flex;align-items:center;justify-content:center;font-size:12px;color:var(--mu);flex-shrink:0}
+.sil .sitx h4{font-size:12px;font-weight:600}
+.sil .sitx p{font-size:10px;color:var(--dm);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.siv{font-size:11px;color:var(--mu);font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.tog{width:40px;height:22px;border-radius:11px;background:var(--card);border:1px solid var(--bd);position:relative;cursor:pointer;transition:var(--t);flex-shrink:0}
+.tog.on{background:var(--ac);border-color:var(--ac)}
+.tog .tk{width:16px;height:16px;border-radius:50%;background:var(--fg);position:absolute;top:2px;left:2px;transition:var(--t)}
+.tog.on .tk{left:20px;background:#0C0F14}
+.cr{background:var(--card);border:1px solid var(--bd);border-radius:var(--rl);margin-bottom:12px;overflow:hidden}
+.cr h4{font-size:11px;font-weight:700;color:var(--dm);text-transform:uppercase;letter-spacing:.4px;margin-bottom:10px;padding:14px 14px 0;display:flex;align-items:center;gap:6px}
+.edit-btn{cursor:pointer;padding:4px 10px;border-radius:var(--rs);background:var(--bg2);border:1px solid var(--bd);font-size:11px;font-weight:600;color:var(--ac);transition:var(--t);flex-shrink:0;font-family:inherit}
+.edit-btn:hover{background:var(--acG);border-color:var(--bdA)}
+.disable-inputs{display:flex;gap:6px;margin-top:8px}
+.disable-inputs input{flex:1;padding:10px 12px;background:var(--card);border:1px solid var(--bd);border-radius:var(--rs);color:var(--fg);font-family:'JetBrains Mono',monospace;font-size:18px;text-align:center;letter-spacing:8px;outline:none}
+.disable-inputs input:focus{border-color:var(--er);box-shadow:0 0 0 2px var(--erG)}
+
+/* Modal overlay */
+.cf-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:500;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+.cf-overlay.show{display:flex}
+.cf-sheet{background:var(--bg2);border-radius:20px 20px 0 0;width:100%;max-width:480px;padding:16px;animation:mU .3s ease;max-height:80vh;overflow-y:auto}
+@media(min-width:768px){.cf-overlay{align-items:center}.cf-sheet{border-radius:var(--rl);max-height:70vh}}
+@keyframes mU{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.cf-handle{width:32px;height:4px;border-radius:2px;background:var(--dm);margin:0 auto 12px}
+.cf-sheet h3{font-size:16px;font-weight:800;margin-bottom:8px}
+.cf-sheet p{font-size:12px;color:var(--mu);line-height:1.5;margin-bottom:12px}
+.cf-btns{display:flex;gap:8px;margin-top:12px}
+.cf-btns button{flex:1;padding:12px;border:none;border-radius:var(--rs);font-family:inherit;font-size:13px;font-weight:600;cursor:pointer;transition:var(--t)}
+.cf-cancel{background:var(--card);color:var(--mu);border:1px solid var(--bd)!important}
+.cf-cancel:hover{background:var(--card2)}
+.cf-ok{background:linear-gradient(135deg,var(--ac),var(--ac2));color:#0C0F14}
+.cf-ok:hover{filter:brightness(1.1)}
+.cf-danger{background:var(--er);color:#fff}
+.cf-danger:hover{filter:brightness(1.1)}
+.cf-warn{background:var(--wn);color:#0C0F14}
+.cf-warn:hover{filter:brightness(1.1)}
+
+/* Overlays */
+.ld-ov{display:none;position:fixed;inset:0;background:var(--bg);z-index:8000;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+.ld-ov.show{display:flex}
+.ld-spinner{width:40px;height:40px;border:3px solid var(--bd);border-top-color:var(--ac);border-radius:50%;animation:ldsp 1s linear infinite}
+@keyframes ldsp{to{transform:rotate(360deg)}}
+.ld-ov p{font-size:13px;color:var(--mu);font-weight:500}
+.so-ov{display:none;position:fixed;inset:0;background:rgba(12,15,20,.92);z-index:8000;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:40px}
+.so-ov.show{display:flex}
+.so-ov .soi{width:64px;height:64px;border-radius:50%;background:var(--inG);border:2px solid rgba(96,165,250,.3);display:flex;align-items:center;justify-content:center;font-size:26px;color:var(--in);animation:rn 2s linear infinite}
+@keyframes rn{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.so-ov h3{font-size:18px;font-weight:800}
+.so-ov .sod{font-size:13px;color:var(--mu);text-align:center;line-height:1.5}
+.so-ov .sob{width:220px;height:5px;background:var(--bd);border-radius:3px;overflow:hidden}
+.so-ov .sobf{height:100%;background:linear-gradient(90deg,var(--in),var(--ok));border-radius:3px;transition:width .4s ease;width:0%}
+.dis-ov{display:none;position:fixed;inset:0;background:var(--bg);z-index:99999;align-items:center;justify-content:center;flex-direction:column;gap:16px;padding:40px;text-align:center}
+.dis-ov.show{display:flex}
+.dis-ov i{font-size:48px;color:var(--er);margin-bottom:8px}
+.dis-ov h2{font-size:20px;font-weight:800;color:var(--er)}
+.dis-ov p{font-size:13px;color:var(--mu);line-height:1.6;max-width:300px}
+
+/* Toast */
+.tc{position:fixed;top:80px;left:50%;transform:translateX(-50%);z-index:9999;display:flex;flex-direction:column;gap:6px;pointer-events:none;width:90%;max-width:440px}
+.tst{padding:10px 14px;border-radius:var(--rs);font-size:12px;font-weight:500;display:flex;align-items:center;gap:8px;animation:tI .3s ease,tO .3s ease 2.7s forwards;pointer-events:auto;box-shadow:0 4px 20px rgba(0,0,0,.5)}
+.tst.ok{background:#0F2A1A;border:1px solid rgba(52,211,153,.3);color:var(--ok)}
+.tst.w{background:#2A2010;border:1px solid rgba(251,191,36,.3);color:var(--wn)}
+.tst.inf{background:#101A2A;border:1px solid rgba(96,165,250,.3);color:var(--in)}
+.tst.er{background:#2A1010;border:1px solid rgba(248,113,113,.3);color:var(--er)}
+@keyframes tI{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:translateY(0)}}
+@keyframes tO{from{opacity:1}to{opacity:0;transform:translateY(-8px)}}
+
+.amb{position:fixed;top:-200px;right:-200px;width:400px;height:400px;background:radial-gradient(circle,rgba(232,168,56,.03) 0%,transparent 70%);pointer-events:none;z-index:0}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div class="amb"></div>
+<div class="cb" id="cBan"><i class="fas fa-wifi-slash"></i><span id="cTxt"></span></div>
+<div class="so-ov" id="soOv"><div class="soi"><i class="fas fa-rotate"></i></div><h3 id="soT">Syncing</h3><div class="sod" id="soD">Connecting...</div><div class="sob"><div class="sobf" id="soB"></div></div></div>
+<div class="ld-ov" id="ldOv"><div class="ld-spinner"></div><p>Preparing registration form...</p></div>
+<div class="dis-ov" id="disOv"><i class="fas fa-lock"></i><h2>Device Disabled</h2><p>This device has been reported as lost or stolen. Contact PNGCIR to resolve.</p></div>
+<div class="tc" id="tC"></div>
+
+<!-- Modals -->
+<div class="cf-overlay" id="editOv"><div class="cf-sheet"><div class="cf-handle"></div><h3 id="editTitle">Edit</h3><div class="fg" style="margin-bottom:0"><input class="fi" id="editInput" placeholder="Enter value..."></div><div class="cf-btns"><button class="cf-cancel" onclick="closeModal('editOv')">Cancel</button><button class="cf-ok" onclick="saveEdit()">Save</button></div></div></div>
+<div class="cf-overlay" id="exitOv"><div class="cf-sheet"><div class="cf-handle"></div><h3>Leave Registration?</h3><p>All entered data will be lost. This cannot be undone.</p><div class="cf-btns"><button class="cf-cancel" onclick="closeModal('exitOv')">Keep Editing</button><button class="cf-danger" onclick="doExit()">Discard</button></div></div></div>
+<div class="cf-overlay" id="subOv"><div class="cf-sheet"><div class="cf-handle"></div><h3>Review Registration</h3><p>Confirm the details below are correct.</p><div id="subReview"></div><div id="subDedupWarn" style="display:none"></div><div class="cf-btns"><button class="cf-cancel" onclick="closeModal('subOv')">Go Back</button><button class="cf-ok" onclick="doSubmit()"><i class="fas fa-paper-plane"></i> Submit</button></div></div></div>
+<div class="cf-overlay" id="delOv"><div class="cf-sheet"><div class="cf-handle"></div><h3>Delete Record?</h3><p id="delMsg">This record will be permanently removed.</p><div class="cf-btns"><button class="cf-cancel" onclick="closeModal('delOv')">Cancel</button><button class="cf-danger" onclick="confirmDel()"><i class="fas fa-trash"></i> Delete</button></div></div></div>
+<div class="cf-overlay" id="dupOv"><div class="cf-sheet"><div class="cf-handle"></div><h3 style="color:var(--wn)"><i class="fas fa-clone"></i> Potential Duplicate Detected</h3><p id="dupMsg">The local ABIS check found a possible match.</p><div id="dupDetail"></div><div class="ca pur" style="margin-bottom:0"><i class="fas fa-flask"></i><div><strong>How deduplication works:</strong> The mobile kit runs a local 1:N biometric check against a cached subset of the national ABIS (T5-OmniMatch). It also checks a composite key: mother UID + child DOB + birth location. Infant biometrics are not used — newborn face recognition has only 15-37% accuracy.</div></div><div class="cf-btns"><button class="cf-cancel" onclick="closeModal('dupOv')">Cancel</button><button class="cf-warn" onclick="forceSubmit()"><i class="fas fa-flag"></i> Submit with Flag</button></div></div></div>
+<div class="cf-overlay" id="recOv"><div class="cf-sheet"><div class="cf-handle"></div><h3 id="recTitle">Record Detail</h3><div id="recBody"></div><div class="cf-btns"><button class="cf-cancel" onclick="closeModal('recOv')">Close</button></div></div></div>
+
+<div class="dev" id="dev">
+  <div class="sbar">
+    <span class="tm" id="sTm">09:41</span>
+    <div class="sbar-r">
+      <div class="badge a" title="Local ABIS cache"><i class="fas fa-fingerprint"></i><span id="abisC">0</span></div>
+      <div class="badge q" title="Pending queue"><i class="fas fa-database"></i><span id="qC">0</span></div>
+      <div class="si off" id="sIn"><div class="pl"></div><span id="sTx">Offline</span></div>
+      <i class="fas fa-wifi" id="wIc" style="color:var(--dm);font-size:10px"></i>
+      <i class="fas fa-battery-three-quarters" style="font-size:12px"></i>
+    </div>
+  </div>
+
+  <div class="content" id="cnt">
+
+    <!-- HOME -->
+    <div class="sc active" id="sH">
+      <div class="hero"><div class="lg"><i class="fas fa-baby"></i></div><h2>Sevis<span>Birth</span></h2></div>
+      <div class="ps"><i class="fas fa-chart-line"></i><div class="pt"><strong>PNG Birth Registration Crisis</strong><div class="psn"><span>13% registered</span><span>7% certified</span><span>~500K/yr</span></div></div></div>
+      <div class="wc"><div class="wa"><i class="fas fa-user-shield"></i></div><div class="wi"><h3 id="chN">Not Configured</h3><div class="wr">Community Health Worker</div><div class="wid" id="chId">Go to Settings</div></div><div class="wt" id="chSt" style="background:var(--wnG);color:var(--wn);border:1px solid rgba(251,191,36,.2)">Setup</div></div>
+      <div class="sts">
+        <div class="st a"><div class="sn" id="nT">0</div><div class="sl">Today</div></div>
+        <div class="st s"><div class="sn" id="nS">0</div><div class="sl">Synced</div></div>
+        <div class="st i"><div class="sn" id="nP">0</div><div class="sl">Pending</div></div>
+        <div class="st p"><div class="sn" id="nFl">0</div><div class="sl">Flagged</div></div>
+      </div>
+      <div class="al">Actions</div>
+      <button class="ab" onclick="startForm()"><div class="ai p"><i class="fas fa-plus"></i></div><div class="at"><h4>New Birth Registration</h4><p>Register a newborn or child</p></div><i class="fas fa-chevron-right ar"></i></button>
+      <button class="ab" onclick="nav('sP')"><div class="ai s"><i class="fas fa-clock-rotate-left"></i></div><div class="at"><h4>Pending Records</h4><p>Queue awaiting sync and dedup</p></div><i class="fas fa-chevron-right ar"></i></button>
+      <button class="ab" onclick="nav('sS')"><div class="ai s"><i class="fas fa-gear"></i></div><div class="at"><h4>Settings</h4><p>CHW profile, ABIS cache, device</p></div><i class="fas fa-chevron-right ar"></i></button>
+      <div class="al" style="margin-top:14px">Recent</div>
+      <div id="hP"></div>
+      <div id="hE" style="text-align:center;padding:20px 0;color:var(--dm);font-size:12px"><i class="fas fa-inbox" style="font-size:24px;display:block;margin-bottom:6px;opacity:.4"></i>No pending records</div>
+    </div>
+
+    <!-- FORM -->
+    <div class="sc" id="sF">
+      <div class="form-hdr"><button class="bk" onclick="confX()"><i class="fas fa-xmark"></i></button><h1>Birth Registration</h1><div style="width:32px"></div></div>
+      <div class="prog-wrap"><div class="prog-info"><span class="pi-lbl">Form Progress</span><span class="pi-pct" id="progPct">0%</span></div><div class="prog-bar"><div class="prog-fill" id="progFill"></div></div></div>
+
+      <div class="fsec">
+        <div class="fsec-hd"><i class="fas fa-file-lines"></i><h3>Registration Type</h3></div>
+        <div class="rt-sel" id="rtSel">
+          <button class="rt-btn sel" onclick="setRT(this,'standard')">Standard<small>Within 12 months</small></button>
+          <button class="rt-btn" onclick="setRT(this,'late')">Late<small>After 12 months</small></button>
+          <button class="rt-btn" onclick="setRT(this,'foundling')">Foundling<small>No parent present</small></button>
+          <button class="rt-btn" onclick="setRT(this,'adoption')">Adoption<small>Court-ordered</small></button>
+        </div>
+        <div class="ca w" id="rtWarn" style="display:none"><i class="fas fa-clock"></i><div>Late registration requires additional verification and at least two witnesses.</div></div>
+      </div>
+
+      <div class="fsec" id="secAdult">
+        <div class="fsec-hd"><i class="fas fa-user-shield"></i><h3>Registering Adult</h3><span class="fsec-tag">Primary Trust Anchor</span></div>
+        <div class="fr">
+          <div class="fg"><label>Relationship</label><select class="fi" id="aRel" onchange="onRelChange();uProg()"><option value="">Select...</option><option>Mother</option><option>Father</option><option>Grandmother (maternal)</option><option>Grandfather (maternal)</option><option>Grandmother (paternal)</option><option>Grandfather (paternal)</option><option>Legal Guardian</option><option>Other</option></select></div>
+          <div class="fg"><label>Full Name</label><input class="fi" id="aName" placeholder="Full name" oninput="uProg()"></div>
+        </div>
+        <div id="aOtherWrap" style="display:none" class="fg"><label>Specify Relationship</label><input class="fi" id="aOther" placeholder="e.g., Uncle, Aunt" oninput="uProg()"></div>
+        <div class="ca inf"><i class="fas fa-shield-halved"></i><div><strong>Why "Registering Adult" not "Mother":</strong> Some children have lost their mothers, or mothers cannot travel. Any parent, grandparent, or legal guardian with SevisPass can anchor the record.</div></div>
+        <label style="font-size:11px;font-weight:600;color:var(--mu);text-transform:uppercase;letter-spacing:.3px;display:block;margin-bottom:8px;margin-top:4px">Verify Identity</label>
+        <div class="rp" id="verifyMethod">
+          <button class="rp-btn sel" onclick="setVM(this,'qr')">SevisPass QR</button>
+          <button class="rp-btn" onclick="setVM(this,'witness')">Witness Vouch</button>
+          <button class="rp-btn" onclick="setVM(this,'facility')">Facility Record</button>
+        </div>
+        <div id="vmQR">
+          <div class="qr-area" id="qrArea" onclick="initOIDC()"><div class="qi"><i class="fas fa-qrcode"></i></div><h4 id="qrT">Tap to Generate QR Code</h4><p id="qrD">Adult scans with SevisWallet — includes local 1:N dedup</p><div class="qr-sprog" id="qrSP"><div class="qr-sbar"><div class="qr-sbar-f" id="qrSF"></div></div><div class="qr-stxt" id="qrST"></div></div></div>
+          <div class="vb" id="qrVB"><i class="fas fa-circle-check"></i><div><div class="vt" id="qrVBT">Verified</div><div class="vd" id="qrVBD"></div></div></div>
+        </div>
+        <div id="vmWit" style="display:none">
+          <div class="ca w"><i class="fas fa-user-check"></i><div>A Tier 2+ witness must vouch for the adult's identity. <strong>No local dedup</strong> — runs server-side after sync.</div></div>
+          <div class="wit" id="vWit1" onclick="scanVouchWitness()"><div class="wva"><i class="fas fa-user"></i></div><div class="wvi"><div class="wn" id="vw1n">Tap to scan witness</div><div class="wtt">Tier 2+ SevisPass required</div></div><div class="wsb pending"><i class="fas fa-plus"></i> Required</div></div>
+        </div>
+        <div id="vmFac" style="display:none">
+          <div class="ca w"><i class="fas fa-hospital"></i><div>Cross-reference against facility records. <strong>No biometric dedup</strong> — composite-key dedup runs server-side.</div></div>
+          <div class="fg"><label>Facility Record Reference</label><input class="fi" id="facRef" placeholder="e.g., AN-2026-00421" oninput="checkFac()"></div>
+          <div class="fg"><label>Record Type</label><select class="fi" id="facType" onchange="checkFac()"><option value="">Select...</option><option>Antenatal Care</option><option>Delivery Record</option><option>Postnatal Care</option></select></div>
+        </div>
+      </div>
+
+      <div class="fsec" id="secChild">
+        <div class="fsec-hd"><i class="fas fa-baby"></i><h3>Child Details</h3><span class="fsec-tag">No biometrics</span></div>
+        <div class="ca pur" style="margin-top:-4px"><i class="fas fa-eye-slash"></i><div><strong>No infant biometrics.</strong> Newborn face recognition: 15-37% accuracy. The child is linked to the parent's verified SevisPass — that IS the primary identifier.</div></div>
+        <div class="fr"><div class="fg"><label>First Name</label><input class="fi" id="cFN" placeholder="First name" oninput="uProg()"></div><div class="fg"><label>Last Name</label><input class="fi" id="cLN" placeholder="Last name" oninput="uProg()"></div></div>
+        <div class="fr"><div class="fg"><label>Date of Birth</label><input type="date" class="fi" id="cDB" oninput="uProg()"></div><div class="fg"><label>Sex</label><select class="fi" id="cSx" onchange="uProg()"><option value="">Select...</option><option>Male</option><option>Female</option></select></div></div>
+      </div>
+
+      <div class="fsec" id="secBirth">
+        <div class="fsec-hd"><i class="fas fa-location-dot"></i><h3>Birth Details</h3></div>
+        <div class="fg"><label>Place of Birth</label><input class="fi" id="bPl" placeholder="e.g., Angau Hospital, Lae" oninput="uProg()"></div>
+        <div class="fr"><div class="fg"><label>Province</label><select class="fi" id="bPr" onchange="uProg()"><option value="">Select...</option><option>Central</option><option>Gulf</option><option>Milne Bay</option><option>Oro</option><option>Western</option><option>Southern Highlands</option><option>Hela</option><option>Enga</option><option>Sandaun</option><option>Western Highlands</option><option>Jiwaka</option><option>Simbu</option><option>Eastern Highlands</option><option>Morobe</option><option>Madang</option><option>East Sepik</option><option>Bougainville</option><option>New Ireland</option><option>Manus</option><option>East New Britain</option><option>West New Britain</option><option>NCD</option></select></div><div class="fg"><label>District</label><input class="fi" id="bDi" placeholder="e.g., Lae" oninput="uProg()"></div></div>
+        <div class="fg"><label>Birth Attendant</label><select class="fi" id="bAtt" onchange="uProg()"><option value="">Select...</option><option>Doctor</option><option>Nurse/Midwife</option><option>CHW</option><option>Traditional Birth Attendant</option><option>Other</option><option>None/Unattended</option></select></div>
+        <div class="fg"><label>GPS Location</label><div style="display:flex;gap:8px;align-items:center;padding:10px 12px;background:var(--card);border:1px solid var(--bd);border-radius:var(--rs)"><i class="fas fa-location-crosshairs" id="gpsIcon" style="color:var(--wn);font-size:14px"></i><span id="gpsText" style="flex:1;font-size:11px;font-family:'JetBrains Mono',monospace;color:var(--mu)">Not captured</span><button type="button" onclick="captureGPS()" style="padding:6px 12px;border:1px solid var(--bdA);border-radius:var(--rs);background:var(--acG);color:var(--ac);font-family:inherit;font-size:11px;font-weight:600;cursor:pointer">Capture</button></div></div>
+      </div>
+
+      <div class="fsec" id="secLate" style="display:none">
+        <div class="fsec-hd"><i class="fas fa-clock"></i><h3>Late Registration</h3><span class="fsec-tag">Extra Fields</span></div>
+        <div class="fg"><label>Reason</label><select class="fi" id="lReason" onchange="uProg()"><option value="">Select...</option><option>Parent unaware of requirement</option><option>Distance to registration office</option><option>Lack of documentation</option><option>Health complications</option><option>Other</option></select></div>
+        <div class="fg"><label>Details</label><textarea class="fi" id="lDetail" placeholder="Explain circumstances..."></textarea></div>
+        <div class="ca w"><i class="fas fa-users"></i><div>Late registrations require at least <strong>two witnesses</strong>.</div></div>
+      </div>
+
+      <div class="fsec" id="secFound" style="display:none">
+        <div class="fsec-hd"><i class="fas fa-child"></i><h3>Foundling Details</h3><span class="fsec-tag">No Parent</span></div>
+        <div class="fr"><div class="fg"><label>Date Found</label><input type="date" class="fi" id="fDate" oninput="uProg()"></div><div class="fg"><label>Location Found</label><input class="fi" id="fLoc" placeholder="Where found" oninput="uProg()"></div></div>
+        <div class="fg"><label>Person Who Found Child</label><input class="fi" id="fFinder" placeholder="Full name" oninput="uProg()"></div>
+        <div class="fg"><label>Police Report Number</label><input class="fi" id="fPolice" placeholder="e.g., PR-2026-XXXXX" oninput="uProg()"></div>
+        <div class="ca er"><i class="fas fa-exclamation-triangle"></i><div>Requires police report and at least <strong>two witnesses</strong>.</div></div>
+      </div>
+
+      <div class="fsec" id="secAdopt" style="display:none">
+        <div class="fsec-hd"><i class="fas fa-heart"></i><h3>Adoption Details</h3><span class="fsec-tag">Court-Ordered</span></div>
+        <div class="fr"><div class="fg"><label>Court Order Number</label><input class="fi" id="adCourt" placeholder="e.g., CO-2026-XXXX" oninput="uProg()"></div><div class="fg"><label>Date of Order</label><input type="date" class="fi" id="adDate" oninput="uProg()"></div></div>
+        <div class="fg"><label>Court Name</label><input class="fi" id="adCourtName" placeholder="e.g., Lae District Court" oninput="uProg()"></div>
+      </div>
+
+      <!-- VERIFICATION & DEDUP -->
+      <div class="fsec" id="secTrust">
+        <div class="fsec-hd"><i class="fas fa-shield-halved"></i><h3>Verification and Deduplication</h3><span class="fsec-tag" id="trustCount">0/4</span></div>
+        <div class="tc-card" id="tcAdultCard"><h4><i class="fas fa-user-shield" style="color:var(--ok)"></i> Parent / Guardian</h4><div class="tc-row"><span class="tl">SevisPass</span><span class="tv" id="tcA1" style="color:var(--wn)">Pending</span></div></div>
+        <div class="tc-card"><h4><i class="fas fa-user-tie" style="color:var(--ac)"></i> Health Worker</h4><div class="tc-row"><span class="tl">You</span><span class="tv" id="tcCHW" style="color:var(--wn)">Not configured</span></div></div>
+        <div class="tc-card dedup-active" id="tcDedupCard"><h4><i class="fas fa-fingerprint" style="color:var(--pu)"></i> Deduplication <span class="dm local" id="dedupBadge">LOCAL 1:N</span></h4><div class="tc-row"><span class="tl">T5-OmniMatch</span><span class="tv" id="tcDedup" style="color:var(--wn)">Awaiting verify</span></div><div class="tc-sub" id="tcDedupSub">Local biometric dedup runs during SevisPass QR verification against cached ABIS subset.</div><div class="dedup-detail" id="dedupDetail" style="display:none"></div></div>
+        <div class="tc-card"><h4><i class="fas fa-clock" style="color:var(--in)"></i> Time and Place</h4><div class="tc-row"><span class="tl">Recorded</span><span class="tv" id="tcTime" style="color:var(--wn)">On submit</span></div></div>
+        <div class="ca pur" style="margin-top:4px"><i class="fas fa-layer-group"></i><div><strong>Two-layer dedup:</strong><br><strong>Layer 1 (Local):</strong> Biometric 1:N against cached ABIS + composite key check. Catches same-day duplicates at this facility.<br><strong>Layer 2 (Server):</strong> Full 1:N against 3.3M+ national NID + composite key. Runs after sync.</div></div>
+      </div>
+
+      <div class="fsec" id="secWit">
+        <div class="fsec-hd"><i class="fas fa-gavel"></i><h3>Witness Attestation</h3><span class="fsec-tag" id="witReq">1 Required</span></div>
+        <div class="ca inf"><i class="fas fa-info-circle"></i><div>Witness confirms the registration is truthful. You cannot also be a witness.</div></div>
+        <div class="wit" id="wit1" onclick="scanWit('wit1')"><div class="wva"><i class="fas fa-user"></i></div><div class="wvi"><div class="wn" id="w1n">Tap to scan witness</div><div class="wtt">SevisPass required</div></div><div class="wsb pending"><i class="fas fa-plus"></i> Required</div></div>
+        <div class="wit" id="wit2" style="display:none" onclick="scanWit('wit2')"><div class="wva"><i class="fas fa-user"></i></div><div class="wvi"><div class="wn" id="w2n">Tap to scan witness</div><div class="wtt">Second witness</div></div><div class="wsb pending"><i class="fas fa-plus"></i> Optional</div></div>
+        <button class="ab" onclick="addWit2()" id="addW2Btn" style="margin-top:4px"><div class="ai s"><i class="fas fa-user-plus"></i></div><div class="at"><h4>Add Second Witness</h4><p>Required for late/foundling</p></div><i class="fas fa-plus ar"></i></button>
+      </div>
+
+      <div class="fsec"><div class="fsec-hd"><i class="fas fa-note-sticky"></i><h3>Notes</h3><span class="fsec-tag">Optional</span></div><textarea class="fi" id="fNotes" placeholder="Any additional observations..."></textarea></div>
+
+      <div class="submit-area">
+        <div class="ca w" id="offlineNote"><i class="fas fa-wifi-slash"></i><div><strong>Offline.</strong> Record encrypted locally. Syncs to PNGCIR when connectivity returns. Server-side dedup runs after sync.</div></div>
+        <div id="dupFlagInline" style="display:none" class="flag-row"><i class="fas fa-flag"></i><div class="flag-text"><strong>Duplicate flagged.</strong> Will be reviewed during server-side dedup.</div></div>
+        <button class="bp" id="submitBtn" disabled onclick="confirmSubmit()"><i class="fas fa-paper-plane"></i> Review and Submit</button>
+        <div class="tiny">By submitting, you confirm the information is accurate and the parent/guardian has given consent.</div>
+      </div>
+    </div>
+
+    <!-- SUCCESS -->
+    <div class="sc" id="sOk">
+      <div class="suc"><div class="sic"><i class="fas fa-check"></i></div><h2>Registration Submitted</h2><p class="sub">Record saved on this device. It will be sent when you have signal.</p></div>
+      <div class="cp"><div class="ch"><h4>Digital Birth Certificate</h4><span class="ci" id="cId">SB-2026-00001</span></div><div class="cn" id="cN">—</div><div class="cd"><div>Born: <span id="cD">—</span></div><div>Place: <span id="cPl">—</span></div><div>Registered by: <span id="cReg">—</span></div><div>Linked to: <span id="cLinked">—</span></div><div>Dedup: <span id="cDedup">—</span></div><div>Status: <span id="cStatus" style="color:var(--wn)">Waiting to send</span></div></div><div class="cf"><span>SevisBirth</span><div style="width:40px;height:40px;background:var(--fg);border-radius:5px;display:flex;align-items:center;justify-content:center"><canvas id="qrC" width="36" height="36"></canvas></div></div></div>
+      <div class="al">SMS (Tok Pisin)</div>
+      <div class="sms"><div class="sms-b" id="smsB">...</div><div class="sms-m">Via Digicel · <span id="smsL">0</span> chars</div></div>
+      <div id="twinPrompt" style="display:none;margin-bottom:10px"><div class="ca inf" style="flex-direction:column;align-items:stretch;gap:10px"><div style="display:flex;gap:8px;align-items:flex-start"><i class="fas fa-people-arrows" style="margin-top:1px"></i><div><strong>Possible twin.</strong> Same parent registered today. Parent details carry over.</div></div><button class="bp" onclick="registerTwin()" style="margin-top:4px"><i class="fas fa-plus"></i> Register Twin</button></div></div>
+      <button class="bp" onclick="nav('sH');resetForm()"><i class="fas fa-plus"></i> Register Another</button>
+      <button class="bsc" onclick="nav('sP')"><i class="fas fa-list"></i> View Records</button>
+    </div>
+
+    <!-- PENDING -->
+    <div class="sc" id="sP">
+      <div class="form-hdr"><button class="bk" onclick="nav('sH')"><i class="fas fa-arrow-left"></i></button><h1>Pending Records</h1><button class="bk" onclick="doSync()" style="font-size:11px;width:auto;padding:0 10px;display:flex;align-items:center;gap:4px;cursor:pointer" title="Sync"><i class="fas fa-rotate"></i></button></div>
+      <div class="ca w" id="pCal"><i class="fas fa-wifi-slash"></i><div>Offline. <span id="pCn">0</span> records queued. Server-side dedup after sync.</div></div>
+      <div id="pL"></div>
+      <div id="pE" style="text-align:center;padding:24px 0;color:var(--dm);font-size:12px"><i class="fas fa-inbox" style="font-size:24px;display:block;margin-bottom:6px;opacity:.4"></i>No records</div>
+    </div>
+
+    <!-- SETTINGS -->
+    <div class="sc" id="sS">
+      <div class="form-hdr"><div style="width:32px"></div><h1>Settings</h1><div style="width:32px"></div></div>
+      <div class="al">CHW Profile</div>
+      <div class="cr" style="padding:0">
+        <div class="sit"><div class="sil"><div class="sii"><i class="fas fa-user"></i></div><div class="sitx"><h4>Full Name</h4><p id="sN">Not set</p></div></div><button class="edit-btn" onclick="openEdit('sN','CHW Name')">Edit</button></div>
+        <div class="sit"><div class="sil"><div class="sii"><i class="fas fa-id-card"></i></div><div class="sitx"><h4>SevisPass UID</h4><p id="sSP">Not set</p></div></div><button class="edit-btn" onclick="openEdit('sSP','SevisPass UID')">Edit</button></div>
+        <div class="sit"><div class="sil"><div class="sii"><i class="fas fa-stethoscope"></i></div><div class="sitx"><h4>Health Facility</h4><p id="sHF">Not set</p></div></div><button class="edit-btn" onclick="openEdit('sHF','Health Facility')">Edit</button></div>
+        <div class="sit"><div class="sil"><div class="sii"><i class="fas fa-map-pin"></i></div><div class="sitx"><h4>Province / District</h4><p id="sPD">Not set</p></div></div><button class="edit-btn" onclick="openEdit('sPD','Province/District')">Edit</button></div>
+      </div>
+      <div class="al" style="margin-top:16px">Current Shift</div>
+      <div class="cr" style="padding:0">
+        <div class="sit"><div class="sil"><div class="sii"><i class="fas fa-calendar"></i></div><div class="sitx"><h4>Shift Start</h4><p id="sSS">Not set</p></div></div><button class="edit-btn" onclick="openEdit('sSS','Shift Start','date')">Set</button></div>
+        <div class="sit"><div class="sil"><div class="sii"><i class="fas fa-calendar-check"></i></div><div class="sitx"><h4>Shift End</h4><p id="sSE">Not set</p></div></div><button class="edit-btn" onclick="openEdit('sSE','Shift End','date')">Set</button></div>
+      </div>
+      <div class="al" style="margin-top:16px">Deduplication (T5-OmniMatch)</div>
+      <div class="cr" style="padding:0">
+        <div class="sit"><div class="sil"><div class="sii" style="background:var(--puG);color:var(--pu)"><i class="fas fa-fingerprint"></i></div><div class="sitx"><h4>Local ABIS Cache</h4><p id="sABIS">— templates</p></div></div><span class="siv" style="color:var(--pu)" id="sABISn">0</span></div>
+        <div class="sit"><div class="sil"><div class="sii" style="background:var(--puG);color:var(--pu)"><i class="fas fa-search"></i></div><div class="sitx"><h4>Local Method</h4><p>1:N biometric + composite key</p></div></div><span class="dm local">LOCAL</span></div>
+        <div class="sit"><div class="sil"><div class="sii" style="background:var(--inG);color:var(--in)"><i class="fas fa-server"></i></div><div class="sitx"><h4>Server Method</h4><p>Full 1:N against 3.3M+ NID + composite</p></div></div><span class="dm server">SERVER</span></div>
+        <div class="sit"><div class="sil"><div class="sii" style="background:var(--acG);color:var(--ac)"><i class="fas fa-key"></i></div><div class="sitx"><h4>Composite Key</h4><p>Parent UID + Child DOB + Place</p></div></div><span class="dm composite">KEY</span></div>
+        <div class="sit"><div class="sil"><div class="sii" style="background:var(--erG);color:var(--er)"><i class="fas fa-ban"></i></div><div class="sitx"><h4>Infant Biometrics</h4><p>Disabled — 15-37% accuracy</p></div></div><span class="siv" style="color:var(--er);font-size:9px">OFF</span></div>
+        <div class="sit" style="cursor:pointer" onclick="refreshABIS()"><div class="sil"><div class="sii" style="background:var(--puG);color:var(--pu)"><i class="fas fa-rotate"></i></div><div class="sitx"><h4>Refresh ABIS Cache</h4><p>Download regional biometric subset</p></div></div><span class="siv" style="color:var(--ac);font-size:10px">Tap</span></div>
+      </div>
+      <div class="al" style="margin-top:16px">Display</div>
+      <div class="cr" style="padding:0">
+        <div class="sit"><div class="sil"><div class="sii"><i class="fas fa-sun"></i></div><div class="sitx"><h4>High Contrast</h4><p>For outdoor sunlight</p></div></div><div class="tog on" id="hcSw" onclick="toggleHC()"><div class="tk"></div></div></div>
+        <div class="sit"><div class="sil"><div class="sii"><i class="fas fa-battery-quarter"></i></div><div class="sitx"><h4>Low Power</h4><p>Reduces brightness, pauses sync</p></div></div><div class="tog" id="lpSw" onclick="toggleLP()"><div class="tk"></div></div></div>
+      </div>
+      <div class="al" style="margin-top:16px">Device</div>
+      <div class="cr" style="padding:0">
+        <div class="sit"><div class="sil"><div class="sii"><i class="fas fa-fingerprint"></i></div><div class="sitx"><h4>Device ID</h4><p id="sDI">—</p></div></div><span class="siv" style="font-size:10px">Read-only</span></div>
+        <div class="sit"><div class="sil"><div class="sii"><i class="fas fa-wifi"></i></div><div class="sitx"><h4>Connectivity</h4><p id="sConn">Detecting...</p></div></div><span class="siv" id="sConnS" style="color:var(--wn)">Offline</span></div>
+        <div class="sit"><div class="sil"><div class="sii"><i class="fas fa-download"></i></div><div class="sitx"><h4>PWA Status</h4><p id="sPWA">Checking...</p></div></div><span class="siv" id="sPWAS">—</span></div>
+      </div>
+      <div class="al" style="margin-top:16px">Remote Disable <span style="color:var(--er);font-weight:700">DANGER</span></div>
+      <div class="cr" style="padding:14px">
+        <div class="ca er"><i class="fas fa-skull-crossbones"></i><div>Enter the 6-digit code to lock this device permanently. <strong>Default: 000000</strong></div></div>
+        <div class="disable-inputs"><input type="text" id="disCode" maxlength="6" placeholder="------" inputmode="numeric" pattern="[0-9]*"><button class="edit-btn" style="background:var(--erG);border-color:rgba(248,113,113,.3);color:var(--er);padding:10px 16px" onclick="disableDevice()"><i class="fas fa-lock"></i> Lock</button></div>
+      </div>
+      <div style="height:20px"></div>
+    </div>
+  </div>
+
+  <nav class="bnav">
+    <button class="ni act" id="navH" onclick="nav('sH')"><i class="fas fa-house"></i><span>Home</span></button>
+    <button class="ni nc" id="navF" onclick="startForm()"><i class="fas fa-plus"></i><span>New</span></button>
+    <button class="ni" id="navP" onclick="nav('sP')"><i class="fas fa-clock-rotate-left"></i><span>Records</span></button>
+    <button class="ni" id="navS" onclick="nav('sS')"><i class="fas fa-gear"></i><span>Settings</span></button>
+  </nav>
+</div>
+
+<script>
+/* =============================================
+   SevisBirth — Complete PWA Logic
+   ============================================= */
+
+// State
+let S = {
+  chw:{name:'',spuid:'',facility:'',provDist:''},
+  shift:{start:'',end:''},
+  records:[],
+  settings:{highContrast:true,lowPower:false,disabled:false,disCode:'000000'},
+  online:navigator.onLine,
+  gps:null,
+  deviceId:'',
+  abisCache:0
+};
+
+// Form state
+let F = {
+  type:'standard',verifyMethod:'qr',
+  adultVerified:false,vouchVerified:false,facilityVerified:false,
+  witness1:null,witness2:null,
+  dedupResult:null,flagged:false,adultUID:null
+};
+
+let editTarget=null,editType='text',delTarget=null,lastSubmitted=null;
+const WN=['Kara Marabe','Joel Wari','Linda Pulu','Thomas Kupo','Mary Songo','David Lembo','Grace Tindi','Peter Raka','Helen Kila','James Mambo'];
+let wIdx=0;
+
+// Init
+function init(){
+  load(); genId();
+  if(!S.abisCache){S.abisCache=847;save();}
+  tick(); setInterval(tick,1000);
+  checkConn();
+  window.addEventListener('online',()=>{S.online=true;connUI();banner(true);toast('Connection restored','ok')});
+  window.addEventListener('offline',()=>{S.online=false;connUI();banner(false);toast('You are offline','w')});
+  upHome(); upPending(); upSettings(); setupPWA();
+  if(S.chw.provDist){const p=S.chw.provDist.split('/');if(p[0])$('bPr').value=p[0].trim();if(p[1])$('bDi').value=p[1].trim();}
+}
+
+function load(){try{const d=localStorage.getItem('sb2');if(d)Object.assign(S,JSON.parse(d));}catch(e){}}
+function save(){try{localStorage.setItem('sb2',JSON.stringify(S));}catch(e){}}
+function genId(){if(!S.deviceId){S.deviceId='SB-DEV-'+Math.random().toString(36).substr(2,8).toUpperCase();save();}}
+function $(id){return document.getElementById(id);}
+function tick(){$('sTm').textContent=new Date().toLocaleTimeString('en-GB',{hour:'2-digit',minute:'2-digit'});}
+
+// Connectivity
+function checkConn(){S.online=navigator.onLine;connUI();if(!S.online)banner(false);}
+function connUI(){
+  const on=S.online;
+  $('sIn').className='si '+(on?'on':'off');
+  $('sTx').textContent=on?'Online':'Offline';
+  $('wIc').style.color=on?'var(--ok)':'var(--dm)';
+  $('sConn').textContent=on?'Connected':'No signal';
+  $('sConnS').textContent=on?'Online':'Offline';
+  $('sConnS').style.color=on?'var(--ok)':'var(--wn)';
+}
+function banner(on){
+  const b=$('cBan'),t=$('cTxt');
+  b.className='cb '+(on?'online':'offline')+' show';
+  t.textContent=on?'Back online':'No internet connection';
+  setTimeout(()=>b.classList.remove('show'),3000);
+}
+
+// Nav
+function nav(id){
+  document.querySelectorAll('.sc').forEach(s=>s.classList.remove('active'));
+  $(id).classList.add('active');
+  $('cnt').scrollTop=0;
+  document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));
+  if(id==='sH')$('navH').classList.add('act');
+  else if(id==='sP'){$('navP').classList.add('act');upPending();}
+  else if(id==='sS'){$('navS').classList.add('act');upSettings();}
+  const o=$('offlineNote');if(o)o.style.display=S.online?'none':'flex';
+}
+
+// Home
+function upHome(){
+  const td=new Date().toDateString();
+  const tr=S.records.filter(r=>new Date(r.createdAt).toDateString()===td);
+  const sy=S.records.filter(r=>r.status==='synced').length;
+  const pe=S.records.filter(r=>r.status==='pending').length;
+  const fl=S.records.filter(r=>r.dedupFlag).length;
+  $('nT').textContent=tr.length;$('nS').textContent=sy;$('nP').textContent=pe;$('nFl').textContent=fl;
+  $('qC').textContent=pe;$('abisC').textContent=S.abisCache;
+  const cn=$('chN'),ci=$('chId'),cs=$('chSt');
+  if(S.chw.name){cn.textContent=S.chw.name;ci.textContent=S.chw.spuid||'No UID';cs.textContent='Active';cs.style.cssText='background:var(--okG);color:var(--ok);border:1px solid rgba(52,211,153,.2)';}
+  else{cn.textContent='Not Configured';ci.textContent='Go to Settings';cs.textContent='Setup';cs.style.cssText='background:var(--wnG);color:var(--wn);border:1px solid rgba(251,191,36,.2)';}
+  const hp=$('hP'),he=$('hE'),rc=S.records.slice(-3).reverse();
+  if(rc.length){he.style.display='none';hp.innerHTML=rc.map(r=>`<div class="pd" onclick="viewRec('${r.id}')" style="cursor:pointer"><div class="dot ${r.dedupFlag?'flagged':r.status}"></div><div class="pi"><div class="pn">${esc(r.childName)}${r.dedupFlag?' <i class="fas fa-flag" style="color:var(--er);font-size:10px"></i>':''}</div><div class="pp">${esc(r.childDOB||'—')} · ${esc(r.birthPlace||'—')}</div></div><span class="pst ${r.dedupFlag?'flagged':r.status}">${r.dedupFlag?'flagged':r.status}</span></div>`).join('');}
+  else{he.style.display='block';hp.innerHTML='';}
+}
+
+// Form
+function startForm(){
+  if(S.settings.disabled)return;
+  $('ldOv').classList.add('show');
+  setTimeout(()=>{resetForm();$('ldOv').classList.remove('show');nav('sF');document.querySelectorAll('.ni').forEach(n=>n.classList.remove('act'));$('navF').classList.add('act');const o=$('offlineNote');if(o)o.style.display=S.online?'none':'flex';},600);
+}
+
+function resetForm(){
+  F={type:'standard',verifyMethod:'qr',adultVerified:false,vouchVerified:false,facilityVerified:false,witness1:null,witness2:null,dedupResult:null,flagged:false,adultUID:null};
+  ['aRel','aName','aOther','cFN','cLN','cDB','cSx','bPl','bPr','bDi','bAtt','lReason','lDetail','fDate','fLoc','fFinder','fPolice','adCourt','adDate','adCourtName','facRef','facType','fNotes'].forEach(id=>{const e=$(id);if(e)e.value='';});
+  document.querySelectorAll('.rt-btn').forEach((b,i)=>b.classList.toggle('sel',i===0));
+  $('rtWarn').style.display='none';
+  document.querySelectorAll('#verifyMethod .rp-btn').forEach((b,i)=>b.classList.toggle('sel',i===0));
+  setVM(document.querySelector('#verifyMethod .rp-btn'),'qr');
+  ['secLate','secFound','secAdopt'].forEach(id=>$(id).style.display='none');
+  $('secAdult').style.display='';
+  const qa=$('qrArea');qa.className='qr-area';$('qrT').textContent='Tap to Generate QR Code';$('qrD').textContent='Adult scans with SevisWallet — includes local 1:N dedup';$('qrSP').classList.remove('active');$('qrSF').style.width='0%';$('qrVB').classList.remove('show');
+  const vw=$('vWit1');vw.classList.remove('verified');$('vw1n').textContent='Tap to scan witness';vw.querySelector('.wtt').textContent='Tier 2+ SevisPass required';vw.querySelector('.wsb').className='wsb pending';vw.querySelector('.wsb').innerHTML='<i class="fas fa-plus"></i> Required';
+  rWit('wit1','w1n');$('wit2').style.display='none';$('addW2Btn').style.display='';
+  S.gps=null;$('gpsIcon').style.color='var(--wn)';$('gpsText').textContent='Not captured';
+  $('tcA1').textContent='Pending';$('tcA1').style.color='var(--wn)';
+  $('tcTime').textContent='On submit';$('tcTime').style.color='var(--wn)';
+  $('trustCount').textContent='0/4';$('submitBtn').disabled=true;
+  $('aOtherWrap').style.display='none';$('dupFlagInline').style.display='none';
+  $('tcDedupCard').className='tc-card dedup-active';$('tcDedup').textContent='Awaiting verify';$('tcDedup').style.color='var(--wn)';$('dedupDetail').style.display='none';$('dedupBadge').className='dm local';$('dedupBadge').textContent='LOCAL 1:N';$('tcDedupSub').textContent='Local biometric dedup runs during SevisPass QR verification against cached ABIS subset.';
+  uProg();
+}
+
+function setRT(btn,type){
+  document.querySelectorAll('.rt-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');F.type=type;
+  $('rtWarn').style.display=(type==='late'||type==='foundling')?'flex':'none';
+  $('secLate').style.display=type==='late'?'':'none';$('secFound').style.display=type==='foundling'?'':'none';$('secAdopt').style.display=type==='adoption'?'':'none';
+  $('secAdult').style.display=type==='foundling'?'none':'';
+  if(type==='late'||type==='foundling'){$('witReq').textContent='2 Required';addWit2();}
+  else{$('witReq').textContent='1 Required';$('wit2').style.display='none';$('addW2Btn').style.display='';F.witness2=null;}
+  if(type==='foundling'){$('tcDedupCard').className='tc-card dedup-active';$('tcDedup').textContent='Server-only';$('tcDedup').style.color='var(--in)';$('tcDedupSub').textContent='Foundling dedup: child DOB + found location + finder. No parent biometric for local check.';$('dedupBadge').className='dm server';$('dedupBadge').textContent='SERVER';}
+  uProg();
+}
+
+function setVM(btn,m){
+  document.querySelectorAll('#verifyMethod .rp-btn').forEach(b=>b.classList.remove('sel'));btn.classList.add('sel');F.verifyMethod=m;
+  $('vmQR').style.display=m==='qr'?'':'none';$('vmWit').style.display=m==='witness'?'':'none';$('vmFac').style.display=m==='facility'?'':'none';
+  F.adultVerified=false;F.vouchVerified=false;F.facilityVerified=false;F.dedupResult=null;
+  const dc=$('tcDedupCard'),dt=$('tcDedup'),ds=$('tcDedupSub'),db=$('dedupBadge'),dd=$('dedupDetail');
+  dd.style.display='none';
+  if(m==='qr'){dc.className='tc-card dedup-active';dt.textContent='Awaiting verify';dt.style.color='var(--wn)';ds.textContent='Local biometric dedup runs during SevisPass QR verification against cached ABIS subset.';db.className='dm local';db.textContent='LOCAL 1:N';}
+  else if(m==='witness'){dc.className='tc-card dedup-warn';dt.textContent='Skipped';dt.style.color='var(--wn)';ds.textContent='Witness vouching cannot trigger local biometric dedup. Server-side composite key: witness UID + child DOB + place.';db.className='dm server';db.textContent='SERVER';}
+  else{dc.className='tc-card dedup-warn';dt.textContent='Skipped';dt.style.color='var(--wn)';ds.textContent='Facility cross-reference cannot trigger biometric dedup. Server composite key: facility ref + child DOB + place.';db.className='dm composite';db.textContent='COMPOSITE';}
+  upTrust();uProg();
+}
+
+function onRelChange(){$('aOtherWrap').style.display=$('aRel').value==='Other'?'':'none';}
+
+// OIDC4VP + Local Dedup
+function initOIDC(){
+  if(F.adultVerified)return;
+  const qa=$('qrArea'),sf=$('qrSF'),st=$('qrST'),sp=$('qrSP');
+  qa.className='qr-area scanning';$('qrT').textContent='Generating OIDC4VP Request...';$('qrD').textContent='Presenting Verifiable Credential request';
+  sp.classList.add('active');sf.style.width='0%';sf.classList.remove('done','warn');
+  const steps=[
+    {p:14,t:'QR generated',d:'Waiting for SevisWallet scan...'},
+    {p:28,t:'Wallet connected',d:'Verifying credential presentation...'},
+    {p:42,t:'SD-JWT validated',d:'Checking W3C VC signature...'},
+    {p:57,t:'DID resolved',d:'Checking revocation registry...'},
+    {p:71,t:'Credential verified',d:'Tier 2+ confirmed — starting dedup...'},
+    {p:85,t:'T5-OmniMatch 1:N',d:'Scanning '+S.abisCache+' cached templates...'},
+    {p:100,t:'Complete',d:''}
+  ];
+  let i=0;const iv=setInterval(()=>{if(i>=steps.length){clearInterval(iv);runDedup(qa,sf,st);return;}sf.style.width=steps[i].p+'%';st.textContent=steps[i].t;$('qrD').textContent=steps[i].d;i++;},700);
+}
+
+function runDedup(qa,sf,st){
+  const name=$('aName').value.trim(),dob=$('cDB').value;
+  F.adultUID='SP-'+(name?name.replace(/\s/g,'').substring(0,4).toUpperCase():'UNK')+'-'+Math.random().toString(36).substr(2,6).toUpperCase();
+  // Check exact composite match in local records
+  const exact=S.records.filter(r=>r.adultUID===F.adultUID&&r.childDOB===dob&&dob&&r.status!=='synced');
+  // Simulated near-match from ABIS cache (~15%)
+  const near=S.records.length>0&&Math.random()<0.15;
+  if(exact.length>0){F.dedupResult={status:'match',method:'local',layer:1,biometricScore:null,compositeMatch:true,matchedRecord:exact[0],checkedAgainst:S.abisCache+' cached + '+S.records.filter(r=>r.status==='pending').length+' local'};showMatch(qa,sf,st,exact[0]);}
+  else if(near){const sc=(0.82+Math.random()*0.12).toFixed(3);F.dedupResult={status:'warning',method:'local',layer:1,biometricScore:sc,compositeMatch:false,matchedRecord:null,checkedAgainst:S.abisCache+' cached templates'};showWarn(qa,sf,st,sc);}
+  else{F.dedupResult={status:'clear',method:'local',layer:1,biometricScore:null,compositeMatch:false,matchedRecord:null,checkedAgainst:S.abisCache+' cached + '+S.records.filter(r=>r.status==='pending').length+' local'};showClear(qa,sf,st);}
+  F.adultVerified=true;upTrust();uProg();
+}
+
+function showClear(qa,sf,st){
+  qa.className='qr-area verified';$('qrT').textContent='Verified — No Duplicates';$('qrD').textContent='Local 1:N: 0 matches';sf.classList.add('done');
+  const n=$('aName').value||'Adult';$('qrVBT').textContent='Verified — Dedup Clear';$('qrVBD').textContent=n+' — Tier 2 — '+F.adultUID;$('qrVB').classList.add('show');
+  $('tcDedup').textContent='Clear — 0 matches';$('tcDedup').style.color='var(--ok)';
+  $('tcDedupSub').textContent='No biometric or composite-key matches in local cache.';
+  $('dedupDetail').style.display='';$('dedupDetail').innerHTML=ddHTML('ok','Local 1:N (T5-OmniMatch)','No face/fingerprint match','No UID+DOB+place match',S.abisCache+' cached + '+S.records.filter(r=>r.status==='pending').length+' local','Server 1:N after sync (3.3M+)');
+  toast('Verified — no duplicates','ok');
+}
+function showWarn(qa,sf,st,sc){
+  qa.className='qr-area dedup-warn';$('qrT').textContent='Verified — Near Match';$('qrD').textContent='Similarity: '+sc+' — review needed';sf.classList.add('warn');$('qrVB').classList.remove('show');
+  $('tcDedupCard').className='tc-card dedup-warn';$('tcDedup').textContent='Warning — '+sc;$('tcDedup').style.color='var(--wn)';
+  $('tcDedupSub').textContent='Biometric similarity above threshold. Server-side ABIS makes final determination.';
+  $('dedupDetail').style.display='';$('dedupDetail').innerHTML=ddHTML('wn','Local 1:N (T5-OmniMatch)','Score: '+sc+' (thresh: 0.80)','No composite match',S.abisCache+' cached templates','Can submit — flagged for server review');
+  $('dupFlagInline').style.display='flex';F.flagged=true;toast('Near match — record flagged','w');
+}
+function showMatch(qa,sf,st,m){
+  qa.className='qr-area dedup-warn';$('qrT').textContent='Duplicate Detected';$('qrD').textContent='Same parent + DOB already registered';sf.classList.add('warn');$('qrVB').classList.remove('show');
+  $('tcDedupCard').className='tc-card dedup-warn';$('tcDedup').textContent='MATCH — '+m.id;$('tcDedup').style.color='var(--er)';
+  $('tcDedupSub').textContent='Exact composite-key match. This child may already be registered.';
+  $('dedupDetail').style.display='';$('dedupDetail').innerHTML='<div class="dl">Method:</div><div class="dv er">Composite key</div><div class="dl">Match:</div><div class="dv er">'+m.id+'</div><div class="dl">Child:</div><div class="dv">'+esc(m.childName)+'</div><div class="dl">DOB:</div><div class="dv">'+esc(m.childDOB)+'</div><div class="dl">When:</div><div class="dv">'+new Date(m.createdAt).toLocaleString('en-GB')+'</div><div class="dl">Action:</div><div class="dv er">Confirm NOT duplicate to proceed</div>';
+  $('dupFlagInline').style.display='flex';F.flagged=true;toast('Duplicate — '+m.childName+' already registered','er');
+}
+function ddHTML(sc,method,bio,comp,checked,action){return'<div class="dl">Method:</div><div class="dv">'+method+'</div><div class="dl">Biometric:</div><div class="dv '+sc+'">'+bio+'</div><div class="dl">Composite:</div><div class="dv '+sc+'">'+comp+'</div><div class="dl">Checked:</div><div class="dv">'+checked+'</div><div class="dl">Next:</div><div class="dv wn">'+action+'</div>';}
+
+// Vouch witness
+function scanVouchWitness(){
+  if(F.vouchVerified)return;const el=$('vWit1');el.style.opacity='0.5';el.style.pointerEvents='none';
+  setTimeout(()=>{const n=WN[wIdx++%WN.length];el.classList.add('verified');$('vw1n').textContent=n;el.querySelector('.wtt').textContent='Tier 2+ — Verified';el.querySelector('.wsb').className='wsb verified';el.querySelector('.wsb').innerHTML='<i class="fas fa-check"></i> Done';el.style.opacity='1';el.style.pointerEvents='';F.vouchVerified=true;F.adultVerified=true;$('tcDedup').textContent='Server-only';$('tcDedup').style.color='var(--in)';upTrust();uProg();toast('Witness verified — server dedup after sync','ok');},1200);
+}
+function checkFac(){const r=$('facRef').value.trim(),t=$('facType').value;if(r&&t&&!F.facilityVerified){F.facilityVerified=true;F.adultVerified=true;$('tcDedup').textContent='Server-only';$('tcDedup').style.color='var(--in)';upTrust();uProg();toast('Facility cross-referenced','ok');}}
+
+// GPS
+function captureGPS(){
+  if(!navigator.geolocation){toast('No geolocation','er');return;}
+  $('gpsIcon').style.color='var(--in)';$('gpsText').textContent='Acquiring...';
+  navigator.geolocation.getCurrentPosition(p=>{S.gps={lat:p.coords.latitude.toFixed(5),lng:p.coords.longitude.toFixed(5)};$('gpsIcon').style.color='var(--ok)';$('gpsText').textContent=S.gps.lat+', '+S.gps.lng;uProg();toast('GPS captured','ok');},e=>{$('gpsIcon').style.color='var(--er)';$('gpsText').textContent='Failed';toast('GPS failed','w');},{enableHighAccuracy:true,timeout:10000});
+}
+
+// Witnesses
+function scanWit(id){
+  const el=$(id);if(el.classList.contains('verified'))return;el.style.opacity='0.5';el.style.pointerEvents='none';
+  setTimeout(()=>{const n=WN[wIdx++%WN.length],p=id==='wit1'?'w1':'w2';el.classList.add('verified');$(p+'n').textContent=n;el.querySelector('.wtt').textContent='Tier 1+ — Verified';el.querySelector('.wsb').className='wsb verified';el.querySelector('.wsb').innerHTML='<i class="fas fa-check"></i> Done';el.style.opacity='1';el.style.pointerEvents='';if(id==='wit1')F.witness1=n;else F.witness2=n;uProg();toast(n+' verified','ok');},900);
+}
+function rWit(id,nid){const el=$(id);el.classList.remove('verified');$(nid).textContent='Tap to scan witness';el.querySelector('.wtt').textContent=id==='wit1'?'SevisPass required':'Second witness';el.querySelector('.wsb').className='wsb pending';el.querySelector('.wsb').innerHTML=id==='wit1'?'<i class="fas fa-plus"></i> Required':'<i class="fas fa-plus"></i> Optional';if(id==='wit1')F.witness1=null;else F.witness2=null;}
+function addWit2(){$('wit2').style.display='flex';$('addW2Btn').style.display='none';uProg();}
+
+// Trust checks
+function upTrust(){
+  let c=0;const a=$('tcA1');
+  if(F.adultVerified){const m=F.verifyMethod==='qr'?'OIDC4VP':F.verifyMethod==='witness'?'Witness vouched':'Facility record';a.textContent='Verified — '+m;a.style.color='var(--ok)';c++;}else{a.textContent='Pending';a.style.color='var(--wn)';}
+  const ch=$('tcCHW');if(S.chw.name){ch.textContent=S.chw.name;ch.style.color='var(--ok)';c++;}else{ch.textContent='Not configured';ch.style.color='var(--wn)';}
+  if(F.dedupResult||F.verifyMethod!=='qr'){c++;}
+  $('tcTime').textContent=new Date().toLocaleString('en-GB');$('tcTime').style.color='var(--ok)';c++;
+  $('trustCount').textContent=c+'/4';
+}
+
+// Progress
+function uProg(){
+  let tot=0,fil=0;
+  const fds=[['aRel',F.type!=='foundling'],['aName',F.type!=='foundling'],['cFN',1],['cLN',1],['cDB',1],['cSx',1],['bPl',1],['bPr',1],['bDi',1],['bAtt',1]];
+  if(F.type==='late')fds.push(['lReason',1]);
+  if(F.type==='foundling')fds.push(['fDate',1],['fLoc',1],['fFinder',1],['fPolice',1]);
+  if(F.type==='adoption')fds.push(['adCourt',1],['adDate',1],['adCourtName',1]);
+  fds.forEach(([id,ct])=>{if(!ct)return;tot++;if($(id).value.trim())fil++;});
+  if(F.type!=='foundling'){tot++;if(F.adultVerified)fil++;}
+  tot++;if(S.gps)fil++;
+  tot++;if(F.witness1)fil++;
+  if(F.type==='late'||F.type==='foundling'){tot++;if(F.witness2)fil++;}
+  const pct=tot?Math.round(fil/tot*100):0;
+  $('progPct').textContent=pct+'%';$('progFill').style.width=pct+'%';$('submitBtn').disabled=pct!==100;
+}
+
+// Submit
+function confirmSubmit(){
+  const tl={standard:'Standard',late:'Late',foundling:'Foundling',adoption:'Adoption'};
+  let h='<div style="font-size:12px;line-height:1.8"><div style="color:var(--ac);font-weight:700;margin-bottom:4px">'+tl[F.type]+'</div>';
+  if(F.type!=='foundling'){h+='<div><span style="color:var(--mu)">Adult:</span> '+esc($('aName').value)+' ('+esc($('aRel').value)+')</div><div><span style="color:var(--mu)">UID:</span> <span style="font-family:JetBrains Mono,monospace;font-size:10px">'+(F.adultUID||'—')+'</span></div>';}
+  h+='<div><span style="color:var(--mu)">Child:</span> '+esc($('cFN').value)+' '+esc($('cLN').value)+'</div><div><span style="color:var(--mu)">DOB:</span> '+esc($('cDB').value)+' · '+esc($('cSx').value)+'</div><div><span style="color:var(--mu)">Place:</span> '+esc($('bPl').value)+', '+esc($('bPr').value)+'</div>';
+  if(S.gps)h+='<div><span style="color:var(--mu)">GPS:</span> '+S.gps.lat+', '+S.gps.lng+'</div>';
+  if(F.witness1)h+='<div><span style="color:var(--mu)">Witness:</span> '+esc(F.witness1)+(F.witness2?' + '+esc(F.witness2):'')+'</div>';
+  h+='</div>';
+  const dw=$('subDedupWarn');
+  if(F.dedupResult&&F.dedupResult.status!=='clear'){const m=F.dedupResult.status==='match';dw.style.display='';dw.innerHTML='<div class="'+(m?'ca er':'ca w')+'" style="margin-bottom:0"><i class="fas '+(m?'fa-clone':'fa-triangle-exclamation')+'"></i><div>'+(m?'<strong>Duplicate:</strong> '+esc(F.dedupResult.matchedRecord.childName)+' already registered.':'<strong>Near match.</strong> Score: '+F.dedupResult.biometricScore+'. Server ABIS decides.')+' Flagged.</div></div>';}
+  else if(F.verifyMethod!=='qr'&&F.adultVerified){dw.style.display='';dw.innerHTML='<div class="ca inf" style="margin-bottom:0"><i class="fas fa-info-circle"></i><div>No local dedup ('+F.verifyMethod+'). Server dedup after sync.</div></div>';}
+  else dw.style.display='none';
+  $('subReview').innerHTML=h;$('subOv').classList.add('show');
+}
+
+function doSubmit(){
+  closeModal('subOv');
+  if(F.dedupResult&&F.dedupResult.status==='match'){showDupModal();return;}
+  submitRec();
+}
+
+function showDupModal(){
+  const m=F.dedupResult.matchedRecord;
+  $('dupMsg').textContent='Same parent UID ('+F.adultUID+') and DOB ('+$('cDB').value+') already registered locally.';
+  $('dupDetail').innerHTML='<div class="dedup-detail" style="display:block;margin-bottom:12px"><div class="dl">Record:</div><div class="dv er">'+m.id+'</div><div class="dl">Child:</div><div class="dv">'+esc(m.childName)+'</div><div class="dl">DOB:</div><div class="dv">'+esc(m.childDOB)+'</div><div class="dl">Place:</div><div class="dv">'+esc(m.birthPlace)+'</div><div class="dl">When:</div><div class="dv">'+new Date(m.createdAt).toLocaleString('en-GB')+'</div></div>';
+  $('dupOv').classList.add('show');
+}
+
+function forceSubmit(){closeModal('dupOv');submitRec();}
+
+function submitRec(){
+  const id='SB-2026-'+String(S.records.length+1).padStart(5,'0');
+  const rec={id,type:F.type,childName:$('cFN').value+' '+$('cLN').value,childDOB:$('cDB').value,childSex:$('cSx').value,birthPlace:$('bPl').value,province:$('bPr').value,district:$('bDi').value,attendant:$('bAtt').value,gps:S.gps,adultName:$('aName').value,adultRel:$('aRel').value,adultUID:F.adultUID,verifyMethod:F.verifyMethod,witness1:F.witness1,witness2:F.witness2,lateReason:$('lReason').value,lateDetail:$('lDetail').value,foundDate:$('fDate').value,foundLoc:$('fLoc').value,finder:$('fFinder').value,policeNo:$('fPolice').value,adoptCourt:$('adCourt').value,adoptDate:$('adDate').value,adoptCourtName:$('adCourtName').value,notes:$('fNotes').value,registeredBy:S.chw.name||'Unknown',facility:S.chw.facility||'',status:'pending',dedupFlag:F.flagged,dedupResult:F.dedupResult,createdAt:new Date().toISOString()};
+  S.records.push(rec);S.abisCache++;save();lastSubmitted=rec;showSuccess(rec);toast('Registration saved','ok');
+}
+
+function showSuccess(r){
+  document.querySelectorAll('.sc').forEach(s=>s.classList.remove('active'));$('sOk').classList.add('active');$('cnt').scrollTop=0;
+  $('cId').textContent=r.id;$('cN').textContent=r.childName;$('cD').textContent=r.childDOB;$('cPl').textContent=r.birthPlace+', '+r.province;$('cReg').textContent=r.registeredBy;$('cLinked').textContent=r.adultName||'N/A';
+  const de=$('cDedup');
+  if(r.dedupResult){if(r.dedupResult.status==='clear')de.innerHTML='<span style="color:var(--ok)">Local: Clear</span> — Server pending';else if(r.dedupResult.status==='warning')de.innerHTML='<span style="color:var(--wn)">Local: Near match ('+r.dedupResult.biometricScore+')</span> — Flagged';else de.innerHTML='<span style="color:var(--er)">Local: Duplicate</span> — '+r.dedupResult.matchedRecord.id+' — Review';}
+  else if(r.verifyMethod!=='qr')de.innerHTML='<span style="color:var(--in)">Local: Skipped</span> — Server pending';
+  else de.textContent='Pending';
+  const st=$('cStatus');if(r.dedupFlag){st.textContent='Flagged — pending review';st.style.color='var(--er)';}else{st.textContent='Waiting to send';st.style.color='var(--wn)';}
+  drawQR('qrC');
+  const sms='Bilong baba/bubu '+r.childName+' i bin kirap long '+r.birthPlace+' long '+r.childDOB+'. SevisBirth ID: '+r.id+'. Sapos yu laik lukim sertifikat, go long SevisWallet na lukim "Documents".';
+  $('smsB').textContent=sms;$('smsL').textContent=sms.length;
+  const td=new Date().toDateString();$('twinPrompt').style.display=S.records.filter(x=>x.adultUID===r.adultUID&&new Date(x.createdAt).toDateString()===td&&x.id!==r.id).length?'':'none';
+}
+
+function drawQR(id){const c=$(id),x=c.getContext('2d'),s=36,n=8,cs=s/n;x.fillStyle='#F0EDE6';x.fillRect(0,0,s,s);x.fillStyle='#0C0F14';[[1,1,1,0,1,1,1,0],[1,0,1,1,1,0,1,0],[1,1,1,0,1,1,1,0],[0,0,0,1,0,0,0,1],[1,1,1,0,1,0,1,1],[1,0,1,1,0,1,0,1],[1,1,1,0,1,1,1,1],[0,0,0,1,1,0,1,0]].forEach((r,y)=>r.forEach((v,x2)=>{if(v)x.fillRect(x2*cs,y*cs,cs,cs);}));}
+
+function registerTwin(){const r=lastSubmitted;if(!r)return;startForm();setTimeout(()=>{$('aRel').value=r.adultRel;$('aName').value=r.adultName;$('bPl').value=r.birthPlace;$('bPr').value=r.province;$('bDi').value=r.district;onRelChange();uProg();toast('Parent carried over — same DOB will trigger dedup','inf');},700);}
+
+// Pending
+function upPending(){
+  const pe=S.records.filter(r=>r.status==='pending'),pl=$('pL'),pE=$('pE');
+  $('pCn').textContent=pe.length;$('qC').textContent=pe.length;$('abisC').textContent=S.abisCache;
+  $('pCal').style.display=(S.online&&pe.length===0)?'none':'flex';
+  if(pe.length){pE.style.display='none';pl.innerHTML=pe.slice().reverse().map(r=>`<div class="pd"><div class="dot ${r.dedupFlag?'flagged':r.status}"></div><div class="pi" onclick="viewRec('${r.id}')" style="cursor:pointer"><div class="pn">${esc(r.childName)}${r.dedupFlag?' <i class="fas fa-flag" style="color:var(--er);font-size:10px"></i>':''}</div><div class="pp">${esc(r.childDOB)} · ${esc(r.birthPlace)} · ${r.dedupResult?r.dedupResult.method+':'+r.dedupResult.status:'no dedup'}</div></div><span class="pst ${r.dedupFlag?'flagged':r.status}">${r.dedupFlag?'flagged':r.status}</span><button class="del-btn" onclick="event.stopPropagation();delRec('${r.id}')"><i class="fas fa-trash-can"></i></button></div>`).join('');}
+  else{pE.style.display='block';pl.innerHTML='';}
+}
+
+function viewRec(id){
+  const r=S.records.find(x=>x.id===id);if(!r)return;
+  let h='<div style="font-size:12px;line-height:1.8">';
+  h+='<div style="display:flex;gap:8px;align-items:center;margin-bottom:8px"><span class="pst '+(r.dedupFlag?'flagged':r.status)+'">'+(r.dedupFlag?'flagged':r.status)+'</span><span style="font-family:JetBrains Mono,monospace;font-size:10px;color:var(--dm)">'+r.id+'</span></div>';
+  h+='<div><span style="color:var(--mu)">Child:</span> <strong>'+esc(r.childName)+'</strong></div>';
+  h+='<div><span style="color:var(--mu)">DOB:</span> '+esc(r.childDOB)+' · '+esc(r.childSex)+'</div>';
+  h+='<div><span style="color:var(--mu)">Place:</span> '+esc(r.birthPlace)+', '+esc(r.province)+'</div>';
+  if(r.adultName)h+='<div><span style="color:var(--mu)">Adult:</span> '+esc(r.adultName)+' ('+esc(r.adultRel)+')</div>';
+  if(r.adultUID)h+='<div><span style="color:var(--mu)">UID:</span> <span style="font-family:JetBrains Mono,monospace;font-size:10px">'+r.adultUID+'</span></div>';
+  h+='<div><span style="color:var(--mu)">Verify:</span> '+r.verifyMethod+'</div>';
+  if(r.witness1)h+='<div><span style="color:var(--mu)">Witness:</span> '+esc(r.witness1)+(r.witness2?' + '+esc(r.witness2):'')+'</div>';
+  if(r.gps)h+='<div><span style="color:var(--mu)">GPS:</span> '+r.gps.lat+', '+r.gps.lng+'</div>';
+  h+='<div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--bd)"><div style="font-weight:700;color:var(--pu);margin-bottom:6px"><i class="fas fa-fingerprint"></i> Deduplication</div>';
+  if(r.dedupResult){h+='<div class="dedup-detail" style="display:block"><div class="dl">Layer:</div><div class="dv">'+(r.dedupResult.layer===1?'Layer 1 (Local)':'Layer 2 (Server)')+'</div><div class="dl">Method:</div><div class="dv">'+r.dedupResult.method+'</div><div class="dl">Status:</div><div class="dv '+(r.dedupResult.status==='clear'?'ok':r.dedupResult.status==='warning'?'wn':'er')+'">'+r.dedupResult.status+'</div>';if(r.dedupResult.biometricScore)h+='<div class="dl">Score:</div><div class="dv wn">'+r.dedupResult.biometricScore+'</div>';if(r.dedupResult.compositeMatch)h+='<div class="dl">Composite:</div><div class="dv er">Yes — '+r.dedupResult.matchedRecord.id+'</div>';h+='<div class="dl">Checked:</div><div class="dv">'+r.dedupResult.checkedAgainst+'</div><div class="dl">Server dedup:</div><div class="dv wn">Pending</div></div>';}
+  else if(r.verifyMethod!=='qr'){h+='<div class="dedup-detail" style="display:block"><div class="dl">Local:</div><div class="dv wn">Skipped ('+r.verifyMethod+')</div><div class="dl">Server:</div><div class="dv wn">Pending</div></div>';}
+  else h+='<div style="color:var(--dm);font-size:11px">No dedup data</div>';
+  h+='</div></div>';
+  $('recTitle').textContent=r.childName;$('recBody').innerHTML=h;$('recOv').classList.add('show');
+}
+
+function delRec(id){delTarget=id;const r=S.records.find(x=>x.id===id);$('delMsg').textContent='Delete "'+(r?r.childName:'')+'"?';$('delOv').classList.add('show');}
+function confirmDel(){if(delTarget){S.records=S.records.filter(r=>r.id!==delTarget);save();upPending();upHome();toast('Deleted','w');}closeModal('delOv');}
+
+// Sync
+function doSync(){
+  const pe=S.records.filter(r=>r.status==='pending');if(!pe.length){toast('Nothing to sync','inf');return;}
+  const ov=$('soOv'),bar=$('soB'),txt=$('soD'),title=$('soT');
+  ov.classList.add('show');title.textContent='Syncing '+pe.length+' Records';bar.style.width='0%';
+  const phases=[{l:'Uploading...',n:pe.length},{l:'Server 1:N dedup (3.3M+ NID)...',n:pe.length},{l:'Composite key dedup...',n:pe.length},{l:'Confirmations...',n:pe.length}];
+  let step=0,sub=0,total=pe.length*phases.length;
+  const iv=setInterval(()=>{sub++;const pct=Math.min(100,Math.round(((step*pe.length+sub)/total)*100));bar.style.width=pct+'%';txt.textContent=phases[step].l+' ('+sub+'/'+phases[step].n+')';
+    if(sub>=phases[step].n){step++;sub=0;if(step>=phases.length){clearInterval(iv);bar.style.width='100%';txt.textContent='All synced and deduped';title.textContent='Sync Complete';S.records.forEach(r=>{if(r.status==='pending')r.status='synced';});S.abisCache=Math.max(S.abisCache,850+Math.floor(Math.random()*50));save();setTimeout(()=>{ov.classList.remove('show');upPending();upHome();upSettings();toast(pe.length+' synced — server dedup complete','ok');},1200);}}},400);
+}
+
+// Exit confirm
+function confX(){if($('cFN').value||$('aName').value||$('bPl').value)$('exitOv').classList.add('show');else nav('sH');}
+function doExit(){closeModal('exitOv');nav('sH');resetForm();}
+
+// Settings
+function upSettings(){
+  $('sN').textContent=S.chw.name||'Not set';$('sSP').textContent=S.chw.spuid||'Not set';$('sHF').textContent=S.chw.facility||'Not set';$('sPD').textContent=S.chw.provDist||'Not set';$('sSS').textContent=S.shift.start||'Not set';$('sSE').textContent=S.shift.end||'Not set';$('sDI').textContent=S.deviceId||'—';$('hcSw').classList.toggle('on',S.settings.highContrast);$('lpSw').classList.toggle('on',S.settings.lowPower);$('sABIS').textContent=S.abisCache+' templates cached';$('sABISn').textContent=S.abisCache;$('abisC').textContent=S.abisCache;
+  const pw=window.matchMedia('(display-mode: standalone)').matches;$('sPWA').textContent=pw?'Installed':'Not installed';$('sPWAS').textContent=pw?'Standalone':'Browser';$('sPWAS').style.color=pw?'var(--ok)':'var(--wn)';connUI();
+}
+function refreshABIS(){toast('Downloading regional ABIS subset...','inf');setTimeout(()=>{S.abisCache=800+Math.floor(Math.random()*200);save();upSettings();toast('Cache refreshed — '+S.abisCache+' templates','ok');},1500);}
+function openEdit(elId,label,type){editTarget=elId;editType=type||'text';$('editTitle').textContent='Edit '+label;const inp=$('editInput');inp.type=editType;inp.value=$(elId).textContent==='Not set'?'':$(elId).textContent;$('editOv').classList.add('show');setTimeout(()=>inp.focus(),300);}
+function saveEdit(){if(!editTarget)return;const v=$('editInput').value.trim();$(editTarget).textContent=v||'Not set';const m={sN:'name',sSP:'spuid',sHF:'facility',sPD:'provDist',sSS:'start',sSE:'end'},k=m[editTarget];if(k){if(k==='start'||k==='end')S.shift[k]=v;else S.chw[k]=v;save();upHome();}closeModal('editOv');toast('Updated','ok');}
+function toggleHC(){S.settings.highContrast=!S.settings.highContrast;$('hcSw').classList.toggle('on',S.settings.highContrast);document.documentElement.style.setProperty('--fg',S.settings.highContrast?'#FFFFFF':'#F0EDE6');document.documentElement.style.setProperty('--mu',S.settings.highContrast?'#A0A5B2':'#8A8F9C');save();}
+function toggleLP(){S.settings.lowPower=!S.settings.lowPower;$('lpSw').classList.toggle('on',S.settings.lowPower);save();toast(S.settings.lowPower?'Low power on':'Low power off','inf');}
+function disableDevice(){if($('disCode').value.trim()===S.settings.disCode){S.settings.disabled=true;save();$('disOv').classList.add('show');}else{toast('Incorrect code','er');$('disCode').value='';$('disCode').focus();}}
+
+// Modal helper
+function closeModal(id){$(id).classList.remove('show');if(id==='editOv')editTarget=null;if(id==='delOv')delTarget=null;}
+
+// PWA
+function setupPWA(){
+  const svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512"><rect width="512" height="512" rx="96" fill="%23E8A838"/><text x="256" y="360" text-anchor="middle" font-size="300" font-weight="900" fill="%230C0F14" font-family="sans-serif">B</text></svg>';
+  const url='data:image/svg+xml,'+svg;
+  const mf={name:'SevisBirth',short_name:'SevisBirth',description:'Offline birth registration for PNG CHWs',start_url:'.',display:'standalone',background_color:'#0C0F14',theme_color:'#E8A838',orientation:'portrait',icons:[{src:url,sizes:'512x512',type:'image/svg+xml',purpose:'any maskable'}]};
+  const bl=new Blob([JSON.stringify(mf)],{type:'application/json'});const lk=document.createElement('link');lk.rel='manifest';lk.href=URL.createObjectURL(bl);document.head.appendChild(lk);
+  const ak=document.createElement('link');ak.rel='apple-touch-icon';ak.href=url;document.head.appendChild(ak);
+  if('serviceWorker' in navigator){const sw=`const C='sb3';self.addEventListener('install',e=>self.skipWaiting());self.addEventListener('activate',e=>e.waitUntil(clients.claim()));self.addEventListener('fetch',e=>{if(e.request.method!=='GET')return;e.respondWith(caches.match(e.request).then(r=>r||fetch(e.request).then(resp=>{if(resp.ok&&resp.type==='basic')caches.open(C).then(c=>c.put(e.request,resp.clone()));return resp}).catch(()=>caches.match('./')))});`;navigator.serviceWorker.register(URL.createObjectURL(new Blob([sw],{type:'application/javascript'}))).catch(()=>{});}
+}
+
+// Toast
+function toast(msg,type){const tc=$('tC'),t=document.createElement('div');t.className='tst '+(type||'inf');const ic={ok:'fa-circle-check',w:'fa-triangle-exclamation',er:'fa-circle-xmark',inf:'fa-circle-info'};t.innerHTML='<i class="fas '+(ic[type]||ic.inf)+'"></i><span>'+esc(msg)+'</span>';tc.appendChild(t);setTimeout(()=>{if(t.parentNode)t.remove();},3200);}
+function esc(s){if(!s)return '';const d=document.createElement('div');d.textContent=s;return d.innerHTML;}
+
+// Boot
+document.addEventListener('DOMContentLoaded',init);
+['editOv','exitOv','subOv','delOv','dupOv','recOv'].forEach(id=>{$(id).addEventListener('click',function(e){if(e.target===this)closeModal(id);});});
+document.addEventListener('keydown',e=>{if(e.key==='Escape')['editOv','exitOv','subOv','delOv','dupOv','recOv'].forEach(id=>closeModal(id));});
+</script>
+</body>
+</html>

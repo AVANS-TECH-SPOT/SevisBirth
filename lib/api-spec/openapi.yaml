@@ -3,20 +3,28 @@ info:
   # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: SevisBirth – PNG birth registration system API
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: auth
+    description: Authentication
+  - name: records
+    description: Birth record management
+  - name: stats
+    description: Dashboard statistics
+  - name: sevispass
+    description: SevisPass QR identity verification (mock)
+
 paths:
   /healthz:
     get:
       operationId: healthCheck
       tags: [health]
       summary: Health check
-      description: Returns server health status
       responses:
         "200":
           description: Healthy
@@ -24,6 +32,262 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+
+  /auth/login:
+    post:
+      operationId: login
+      tags: [auth]
+      summary: Log in with username/password (demo roles)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginInput"
+      responses:
+        "200":
+          description: Authenticated session
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Session"
+        "401":
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/me:
+    get:
+      operationId: getMe
+      tags: [auth]
+      summary: Get current session user
+      responses:
+        "200":
+          description: Current user
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "401":
+          description: Unauthenticated
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /auth/logout:
+    post:
+      operationId: logout
+      tags: [auth]
+      summary: End session
+      responses:
+        "200":
+          description: Logged out
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SuccessResponse"
+
+  /birth-records:
+    get:
+      operationId: listBirthRecords
+      tags: [records]
+      summary: List birth records (filtered by role)
+      parameters:
+        - in: query
+          name: state
+          schema:
+            type: string
+        - in: query
+          name: province
+          schema:
+            type: string
+        - in: query
+          name: search
+          schema:
+            type: string
+        - in: query
+          name: page
+          schema:
+            type: integer
+            default: 1
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            default: 20
+      responses:
+        "200":
+          description: Paginated list of records
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BirthRecordPage"
+    post:
+      operationId: createBirthRecord
+      tags: [records]
+      summary: Submit a new birth record (CHW)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/BirthRecordInput"
+      responses:
+        "201":
+          description: Record created
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BirthRecord"
+        "400":
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /birth-records/{id}:
+    get:
+      operationId: getBirthRecord
+      tags: [records]
+      summary: Get single record with history
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Record detail
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/BirthRecordDetail"
+        "404":
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /birth-records/{id}/transition:
+    post:
+      operationId: transitionBirthRecord
+      tags: [records]
+      summary: Execute a state transition
+      parameters:
+        - in: path
+          name: id
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/TransitionInput"
+      responses:
+        "200":
+          description: Transition applied
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TransitionResult"
+        "400":
+          description: Invalid transition
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+        "403":
+          description: Role not permitted
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ApiError"
+
+  /stats:
+    get:
+      operationId: getStats
+      tags: [stats]
+      summary: Dashboard statistics
+      responses:
+        "200":
+          description: Stats object
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Stats"
+
+  /stats/by-province:
+    get:
+      operationId: getStatsByProvince
+      tags: [stats]
+      summary: Registration counts grouped by province
+      responses:
+        "200":
+          description: Province breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ProvinceCount"
+
+  /stats/by-state:
+    get:
+      operationId: getStatsByState
+      tags: [stats]
+      summary: Record counts grouped by state
+      responses:
+        "200":
+          description: State breakdown
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/StateCount"
+
+  /activity:
+    get:
+      operationId: getActivity
+      tags: [stats]
+      summary: Recent activity feed (last 20 state transitions)
+      responses:
+        "200":
+          description: Activity feed
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ActivityItem"
+
+  /sevispass/mock-scan:
+    post:
+      operationId: mockSevispassScan
+      tags: [sevispass]
+      summary: Simulate SevisPass QR scan – returns mock verified identity
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SevispassScanInput"
+      responses:
+        "200":
+          description: Mock identity result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SevispassScanResult"
+
 components:
   schemas:
     HealthStatus:
@@ -34,3 +298,382 @@ components:
       required:
         - status
 
+    ApiError:
+      type: object
+      properties:
+        error:
+          type: string
+      required:
+        - error
+
+    SuccessResponse:
+      type: object
+      properties:
+        success:
+          type: boolean
+      required:
+        - success
+
+    LoginInput:
+      type: object
+      required: [username, password]
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+
+    User:
+      type: object
+      required: [id, name, role, tier, facilityName, facilityCode, sevispassId]
+      properties:
+        id:
+          type: string
+        name:
+          type: string
+        role:
+          type: string
+          enum: [field_worker, facility_manager, civil_registrar, registrar_general]
+        tier:
+          type: integer
+        facilityName:
+          type: string
+        facilityCode:
+          type: string
+        sevispassId:
+          type: string
+
+    Session:
+      type: object
+      required: [token, user]
+      properties:
+        token:
+          type: string
+        user:
+          $ref: "#/components/schemas/User"
+
+    BirthRecord:
+      type: object
+      required:
+        - id
+        - state
+        - stateLabel
+        - registrationType
+        - childFirstName
+        - childLastName
+        - childDob
+        - childSex
+        - birthPlace
+        - province
+        - district
+        - attendant
+        - operatorName
+        - operatorRole
+        - facilityCode
+        - createdAt
+        - updatedAt
+        - dedupFlag
+        - verifyMethod
+      properties:
+        id:
+          type: string
+        state:
+          type: string
+        stateLabel:
+          type: string
+        registrationType:
+          type: string
+          enum: [standard, late, foundling, adoption]
+        childFirstName:
+          type: string
+        childLastName:
+          type: string
+        childDob:
+          type: string
+        childSex:
+          type: string
+          enum: [Male, Female]
+        birthPlace:
+          type: string
+        province:
+          type: string
+        district:
+          type: string
+        attendant:
+          type: string
+        adultName:
+          type: ["string", "null"]
+        adultRelation:
+          type: ["string", "null"]
+        adultUid:
+          type: ["string", "null"]
+        verifyMethod:
+          type: string
+        witness1:
+          type: ["string", "null"]
+        witness2:
+          type: ["string", "null"]
+        dedupFlag:
+          type: boolean
+        dedupStatus:
+          type: ["string", "null"]
+        notes:
+          type: ["string", "null"]
+        operatorName:
+          type: string
+        operatorRole:
+          type: string
+        facilityCode:
+          type: string
+        gpsLat:
+          type: ["number", "null"]
+        gpsLng:
+          type: ["number", "null"]
+        certificateId:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+        updatedAt:
+          type: string
+
+    BirthRecordDetail:
+      allOf:
+        - $ref: "#/components/schemas/BirthRecord"
+        - type: object
+          required: [history]
+          properties:
+            history:
+              type: array
+              items:
+                $ref: "#/components/schemas/StateHistory"
+
+    StateHistory:
+      type: object
+      required: [id, fromState, toState, actorName, actorRole, createdAt]
+      properties:
+        id:
+          type: integer
+        fromState:
+          type: ["string", "null"]
+        toState:
+          type: string
+        actorName:
+          type: string
+        actorRole:
+          type: string
+        reason:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    BirthRecordPage:
+      type: object
+      required: [records, total, page, limit]
+      properties:
+        records:
+          type: array
+          items:
+            $ref: "#/components/schemas/BirthRecord"
+        total:
+          type: integer
+        page:
+          type: integer
+        limit:
+          type: integer
+
+    BirthRecordInput:
+      type: object
+      required:
+        - registrationType
+        - childFirstName
+        - childLastName
+        - childDob
+        - childSex
+        - birthPlace
+        - province
+        - district
+        - attendant
+        - verifyMethod
+      properties:
+        registrationType:
+          type: string
+          enum: [standard, late, foundling, adoption]
+        childFirstName:
+          type: string
+        childLastName:
+          type: string
+        childDob:
+          type: string
+        childSex:
+          type: string
+          enum: [Male, Female]
+        birthPlace:
+          type: string
+        province:
+          type: string
+        district:
+          type: string
+        attendant:
+          type: string
+        adultName:
+          type: string
+        adultRelation:
+          type: string
+        adultUid:
+          type: string
+        verifyMethod:
+          type: string
+        witness1:
+          type: string
+        witness2:
+          type: string
+        dedupFlag:
+          type: boolean
+        dedupStatus:
+          type: string
+        notes:
+          type: string
+        gpsLat:
+          type: number
+        gpsLng:
+          type: number
+
+    TransitionInput:
+      type: object
+      required: [toState]
+      properties:
+        toState:
+          type: string
+        reason:
+          type: string
+
+    TransitionResult:
+      type: object
+      required: [id, previousState, newState, newStateLabel]
+      properties:
+        id:
+          type: string
+        previousState:
+          type: string
+        newState:
+          type: string
+        newStateLabel:
+          type: string
+
+    Stats:
+      type: object
+      required:
+        - total
+        - today
+        - pending
+        - inReview
+        - approved
+        - complete
+        - flagged
+        - byState
+      properties:
+        total:
+          type: integer
+        today:
+          type: integer
+        pending:
+          type: integer
+        inReview:
+          type: integer
+        approved:
+          type: integer
+        complete:
+          type: integer
+        flagged:
+          type: integer
+        byState:
+          type: object
+          additionalProperties:
+            type: integer
+
+    ProvinceCount:
+      type: object
+      required: [province, count]
+      properties:
+        province:
+          type: string
+        count:
+          type: integer
+
+    StateCount:
+      type: object
+      required: [state, stateLabel, count]
+      properties:
+        state:
+          type: string
+        stateLabel:
+          type: string
+        count:
+          type: integer
+
+    ActivityItem:
+      type: object
+      required:
+        - id
+        - recordId
+        - childName
+        - fromState
+        - toState
+        - actorName
+        - actorRole
+        - createdAt
+      properties:
+        id:
+          type: integer
+        recordId:
+          type: string
+        childName:
+          type: string
+        fromState:
+          type: ["string", "null"]
+        toState:
+          type: string
+        actorName:
+          type: string
+        actorRole:
+          type: string
+        reason:
+          type: ["string", "null"]
+        createdAt:
+          type: string
+
+    SevispassScanInput:
+      type: object
+      required: [context]
+      properties:
+        context:
+          type: string
+          description: "parent | witness"
+        name:
+          type: string
+
+    SevispassScanResult:
+      type: object
+      required: [verified, uid, name, tier, tierLabel, dedup]
+      properties:
+        verified:
+          type: boolean
+        uid:
+          type: string
+        name:
+          type: string
+        tier:
+          type: integer
+        tierLabel:
+          type: string
+        dedup:
+          type: object
+          required: [status, method]
+          properties:
+            status:
+              type: string
+              enum: [clear, warning, match]
+            method:
+              type: string
+            biometricScore:
+              type: ["number", "null"]
