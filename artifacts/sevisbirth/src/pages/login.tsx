@@ -91,46 +91,9 @@ export default function LoginPage() {
     setVerifiedStaff(user);
     setOidcOpen(false);
     if (pendingAccount) {
-      // For staff roles, use OIDC4VP verified identity
-      const staffRoles = ["facility_manager", "civil_registrar", "registrar_general"];
-      if (staffRoles.includes(pendingAccount.roleKey)) {
-        // Call new SSO endpoint with verified SevisPass UID
-        loginWithOidc(user.uid);
-      } else {
-        // For CHWs, use credential-based login (legacy)
-        loginMutation.mutate({
-          data: { username: pendingAccount.username, password: pendingAccount.password },
-        });
-      }
-    }
-  }
-
-  async function loginWithOidc(sevispassUid: string) {
-    try {
-      const response = await fetch("/api/auth/login-oidc", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          sevispassUid,
-          verifiedName: verifiedStaff?.name,
-        }),
+      loginMutation.mutate({
+        data: { username: pendingAccount.username, password: pendingAccount.password },
       });
-
-      if (!response.ok) {
-        const error = await response.json();
-        alert(`Login failed: ${error.error}`);
-        return;
-      }
-
-      const data = await response.json();
-      loginWithSession(data);
-
-      // Navigate based on role
-      if (data.user.role === UserRole.facility_manager) setLocation("/facility");
-      else if (data.user.role === UserRole.civil_registrar) setLocation("/registry");
-      else if (data.user.role === UserRole.registrar_general) setLocation("/approval");
-    } catch (error) {
-      alert(`Login error: ${error}`);
     }
   }
 
